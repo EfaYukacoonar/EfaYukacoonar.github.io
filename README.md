@@ -1,5 +1,5 @@
 # EfaYukacoonar.github.io
-This is the source code of EfaYukacoonar's official website
+This is the source code of EfaYukacoonar's official website.
 
 ## Contribution and copyright
 
