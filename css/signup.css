@@ -1,0 +1,14 @@
+<style>
+  .signup {
+    color: rgb(39, 154, 169);
+    background-color: rgb(130, 197, 202)
+    border: none;
+    hieght: 50 px;
+    widgh: 150 px;
+    border-radius: 25px;
+    border-style: solid;
+    border-color: rgb(196, 171, 163)
+    border-widgh: 2px;
+    cursor: pointer;
+  }
+</style>
