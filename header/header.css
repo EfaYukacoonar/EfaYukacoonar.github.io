@@ -1,0 +1,167 @@
+:root{
+  --glass-bg: rgba(255,255,255,0.18);
+  --glass-border: rgba(255,255,255,0.35);
+  --accent: rgba(255,255,255,0.9);
+  --shadow: 0 6px 18px rgba(11, 16, 23, 0.28);
+  --header-height: 72px;
+  --gap: 1rem;
+  font-family: Inter, system-ui, "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
+}
+
+/* リセット的な基本 */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background: linear-gradient(180deg,#e8f0ff 0%, #f7f9ff 100%);
+  color:#07203a;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ---------- ヘッダー（glassmorphism） ---------- */
+.glass-header{
+  position:fixed;
+  left:0;
+  right:0;
+  top:0;
+  height:var(--header-height);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 1rem;
+  gap:var(--gap);
+  z-index:999;
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  transform: translateY(0);
+  transition: transform .34s cubic-bezier(.2,.9,.2,1), background .25s;
+}
+
+/* hide class applied by JS */
+.glass-header.hidden{
+  transform: translateY(-110%);
+}
+
+/* 左のグループ（ハンバーガー＋タイトル） */
+.left-group{
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+}
+
+/* site title */
+.site-title{
+  text-decoration:none;
+  color:var(--accent);
+  font-weight:700;
+  font-size:1.35rem;
+  letter-spacing:-0.02em;
+  margin-left:0.25rem;
+  display:inline-block;
+}
+
+/* nav items (右側) */
+.nav-items{
+  display:flex;
+  align-items:center;
+  gap:0.66rem;
+}
+
+/* アイコンボタンの基礎 */
+.icon-btn{
+  background:transparent;
+  border:0;
+  padding:0.4rem;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:var(--accent);
+}
+.icon-btn:hover, .user-btn:hover { background: rgba(255,255,255,0.06); }
+
+/* nav item (icon + text) */
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  text-decoration:none;
+  color:var(--accent);
+  padding:0.4rem 0.6rem;
+  border-radius:10px;
+  font-size:0.95rem;
+}
+.nav-item svg{ opacity:0.95; }
+.nav-item:hover{ background: rgba(255,255,255,0.06); }
+
+/* user */
+.user-wrap{ position:relative; display:inline-block; }
+.user-btn{
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.06);
+  padding:0.42rem;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:var(--accent);
+}
+.dropdown{
+  position:absolute;
+  right:0;
+  top:calc(var(--header-height) + 8px);
+  min-width:160px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,245,248,0.96));
+  color:#07203a;
+  border-radius:10px;
+  box-shadow:0 8px 30px rgba(10,20,30,0.12);
+  border:1px solid rgba(8,12,20,0.06);
+  display:none;
+  flex-direction:column;
+  padding:0.4rem 0;
+  z-index:1200;
+}
+.dropdown a{
+  padding:0.6rem 1rem;
+  text-decoration:none;
+  color:inherit;
+  font-weight:600;
+}
+.dropdown a:hover{ background:rgba(0,0,0,0.03); }
+
+/* サイドメニュー */
+.side-menu{
+  position:fixed;
+  left:-320px;
+  top:0;
+  bottom:0;
+  width:280px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,245,248,0.94));
+  box-shadow: 8px 0 40px rgba(7,15,25,0.12);
+  padding:1.25rem;
+  transition:left .32s cubic-bezier(.2,.9,.2,1);
+  z-index:1100;
+  border-right:1px solid rgba(8,12,20,0.04);
+}
+.side-menu.open{ left:0; }
+.side-menu .close-btn{
+  background:transparent;border:0;font-size:1.1rem;cursor:pointer;padding:0.25rem;margin-bottom:0.4rem;
+}
+.side-menu ul{ list-style:none;padding:0;margin:0; }
+.side-menu li{ margin:0.6rem 0; }
+.side-menu a{ text-decoration:none;color:#07203a;font-weight:600; }
+
+/* メディアクエリ（狭い画面） */
+@media (max-width:800px){
+  .site-title{ font-size:1.05rem; }
+  .nav-item span{ display:none; } /* 省スペースでアイコンだけにする */
+}
+
+/* メインコンテンツがヘッダーと被らないように余白 */
+main{ padding-top: calc(var(--header-height) + 14px); }
