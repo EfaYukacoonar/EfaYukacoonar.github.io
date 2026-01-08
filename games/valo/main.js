@@ -30,12 +30,21 @@ for (let i = 0; i < 20; i++) {
 
 // 3. FPS操作の設定
 const controls = new PointerLockControls(camera, document.body);
-document.addEventListener('click', () => { controls.lock(); });
 
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+// 画面を「クリック」または「タップ」した時にロックを開始
+const startGmae = () => {
+    controls.lock();
+};
+
+document.addEventListener('click', startGmae);
+
+// ロックされたかどうかをログで確認（デバッグ用）
+controls.addEventListener('lock', () => {
+    console.log('マウスがロックされました！視点移動ができるはずです');
+});
+
+controls.addEventListener('unlock', () => {
+    console.log('ロックが解除されました');
 });
 
 // 4. 描画ループ
