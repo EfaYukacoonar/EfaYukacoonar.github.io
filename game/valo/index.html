@@ -1,7 +1,7 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/examples/js/controls/PointerLockControls.js"></script>
+<script type="module">
+  import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.module.js';
+  import { PointerLockControls } from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/examples/jsm/controls/PointerLockControls.js';
 
-<script>
   // シーン（3D空間）
   const scene = new THREE.Scene();
 
@@ -9,14 +9,14 @@
   const camera = new THREE.PerspectiveCamera(
     75, window.innerWidth / window.innerHeight, 0.1, 1000
   );
-  camera.position.set(0, 1.6, 3); // 人間の目の高さっぽく
+  camera.position.set(0, 1.6, 3);
 
-  // レンダラー（画面に描くやつ）
+  // レンダラー
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // テスト用の床
+  // 床
   const floorGeo = new THREE.PlaneGeometry(50, 50);
   const floorMat = new THREE.MeshBasicMaterial({ color: 0x444444 });
   const floor = new THREE.Mesh(floorGeo, floorMat);
@@ -24,9 +24,8 @@
   scene.add(floor);
 
   // FPSコントローラー
-  const controls = new THREE.PointerLockControls(camera, document.body);
+  const controls = new PointerLockControls(camera, document.body);
 
-  // クリックでロック開始
   document.body.addEventListener('click', () => {
     controls.lock();
   });
@@ -36,17 +35,14 @@
   document.addEventListener('keydown', e => keys[e.code] = true);
   document.addEventListener('keyup', e => keys[e.code] = false);
 
-  // 移動処理
   function updateMovement() {
     const speed = 0.1;
-
     if (keys['KeyW']) controls.moveForward(speed);
     if (keys['KeyS']) controls.moveForward(-speed);
     if (keys['KeyA']) controls.moveRight(-speed);
     if (keys['KeyD']) controls.moveRight(speed);
   }
 
-  // 描画ループ
   function animate() {
     requestAnimationFrame(animate);
     updateMovement();
