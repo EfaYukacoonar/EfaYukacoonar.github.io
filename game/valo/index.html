@@ -1,4 +1,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/examples/js/controls/PointerLockControls.js"></script>
+
 <script>
   // シーン（3D空間）
   const scene = new THREE.Scene();
@@ -21,36 +23,34 @@
   floor.rotation.x = -Math.PI / 2;
   scene.add(floor);
 
+  // FPSコントローラー
+  const controls = new THREE.PointerLockControls(camera, document.body);
+
+  // クリックでロック開始
+  document.body.addEventListener('click', () => {
+    controls.lock();
+  });
+
+  // キーボード入力
+  const keys = {};
+  document.addEventListener('keydown', e => keys[e.code] = true);
+  document.addEventListener('keyup', e => keys[e.code] = false);
+
+  // 移動処理
+  function updateMovement() {
+    const speed = 0.1;
+
+    if (keys['KeyW']) controls.moveForward(speed);
+    if (keys['KeyS']) controls.moveForward(-speed);
+    if (keys['KeyA']) controls.moveRight(-speed);
+    if (keys['KeyD']) controls.moveRight(speed);
+  }
+
   // 描画ループ
   function animate() {
     requestAnimationFrame(animate);
+    updateMovement();
     renderer.render(scene, camera);
   }
   animate();
 </script>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/examples/js/controls/PointerLockControls.js"></script>
-// FPSコントローラー
-const controls = new THREE.PointerLockControls(camera, document.body);
-
-// クリックでロック開始
-document.body.addEventListener('click', () => {
-  controls.lock();
-});
-
-// キーボード入力
-const keys = {};
-document.addEventListener('keydown', e => keys[e.code] = true);
-document.addEventListener('keyup', e => keys[e.code] = false);
-
-// 移動処理
-function updateMovement() {
-  const speed = 0.1;
-
-  if (keys['KeyW']) controls.moveForward(speed);
-  if (keys['KeyS']) controls.moveForward(-speed);
-  if (keys['KeyA']) controls.moveRight(-speed);
-  if (keys['KeyD']) controls.moveRight(speed);
-}
-updateMovement();
