@@ -13,23 +13,30 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// --
-• 2. 地面と箱（高低差）を作る ---
-const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1); // 全体を明るくする光
+// --- 2. 【ここから入れ替え！】 ---
+const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
 scene.add(light);
 
-const floorGeometry = new THREE.PlaneGeometry(100, 100);
-const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2;
-scene.add(floor);
+// 地面の代わりにグリッドを表示
+const gridHelper = new THREE.GridHelper(100, 100);
+scene.add(gridHelper);
 
-// 練習用の段差
-const boxGeometry = new THREE.BoxGeometry(2, 1, 2);
-const boxMaterial = new THREE.MeshPhongMaterial({ color: 0x444444 });
-const box = new THREE.Mesh(boxGeometry, boxMaterial);
-box.position.set(0, 0.5, -5);
-scene.add(box);
+// 20個のランダムな箱を作る
+for (let i = 0; i < 20; i++) {
+    const size = Math.random() * 2 + 1;
+    const geometry = new THREE.BoxGeometry(size, size, size);
+    const material = new THREE.MeshPhongMaterial({ 
+        color: Math.random() * 0xffffff 
+    });
+    const testBox = new THREE.Mesh(geometry, material);
+    
+    testBox.position.x = (Math.random() - 0.5) * 40;
+    testBox.position.z = (Math.random() - 0.5) * 40;
+    testBox.position.y = size / 2;
+    
+    scene.add(testBox);
+}
+
 
 // --
 • 3. FPS操作の設定 ---
