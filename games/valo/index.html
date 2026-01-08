@@ -1,52 +1,41 @@
-<script type="module">
-  import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.module.js';
-  import { PointerLockControls } from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/examples/jsm/controls/PointerLockControls.js';
-
-  // シーン（3D空間）
-  const scene = new THREE.Scene();
-
-  // カメラ（視点）
-  const camera = new THREE.PerspectiveCamera(
-    75, window.innerWidth / window.innerHeight, 0.1, 1000
-  );
-  camera.position.set(0, 1.6, 3);
-
-  // レンダラー
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
-  // 床
-  const floorGeo = new THREE.PlaneGeometry(50, 50);
-  const floorMat = new THREE.MeshBasicMaterial({ color: 0x444444 });
-  const floor = new THREE.Mesh(floorGeo, floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  scene.add(floor);
-
-  // FPSコントローラー
-  const controls = new PointerLockControls(camera, document.body);
-
-  document.body.addEventListener('click', () => {
-    controls.lock();
-  });
-
-  // キーボード入力
-  const keys = {};
-  document.addEventListener('keydown', e => keys[e.code] = true);
-  document.addEventListener('keyup', e => keys[e.code] = false);
-
-  function updateMovement() {
-    const speed = 0.1;
-    if (keys['KeyW']) controls.moveForward(speed);
-    if (keys['KeyS']) controls.moveForward(-speed);
-    if (keys['KeyA']) controls.moveRight(-speed);
-    if (keys['KeyD']) controls.moveRight(speed);
-  }
-
-  function animate() {
-    requestAnimationFrame(animate);
-    updateMovement();
-    renderer.render(scene, camera);
-  }
-  animate();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+    content="width=device-width, initital-scale=1.0">
+    <title>vval-clone aim lab</title>
+    <style>
+      body {
+        margin: 0;
+        overflow:hidden;
+        background-color: #000;
+      }
+      #crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        border: 2px solid #00FFFF;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="crosshair"></div>
+    <script type="importmap">
+      {
+        "imports":{
+          "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/examples/jsm/controls/PointerLockControls":
+          "https:// unpkg.com/three@0.160.0/examples/ jsm/controls/PointerLockControls.js"
+        }
+      }
+    </script>
+    <script type="module"
+    src="main.js"></script>
+  </body>
+</html>
