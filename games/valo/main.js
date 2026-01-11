@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
-// 1. 世界の基本セットアップ
+// --- 1. 世界の基本セットアップ ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
@@ -12,7 +12,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// 2. 地面と箱を作る
+// --- 2. ライトとマップ（地面・箱） ---
 const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
 scene.add(light);
 
@@ -28,28 +28,59 @@ for (let i = 0; i < 20; i++) {
     scene.add(testBox);
 }
 
-// 3. FPS操作の設定
+// --- 3. 操作の設定（視点とキーボード） ---
 const controls = new PointerLockControls(camera, document.body);
+document.addEventListener('click', () => { controls.lock(); });
 
-// 画面を「クリック」または「タップ」した時にロックを開始
-const startGmae = () => {
-    controls.lock();
-};
+// キーボードの状態を記録する箱
+const keys = { w: false, a: false, s: false, d: false };
 
-document.addEventListener('click', startGmae);
-
-// ロックされたかどうかをログで確認（デバッグ用）
-controls.addEventListener('lock', () => {
-    console.log('マウスがロックされました！視点移動ができるはずです');
+// キーが押されたら true、離されたら false にする
+document.addEventListener('keydown', (e) => { 
+    const key = e.key.toLowerCase();
+    if (key in keys) keys[key] = true;
+});
+document.addEventListener('keyup', (e) => { 
+    const key = e.key.toLowerCase();
+    if (key in keys) keys[key] = false;
 });
 
-controls.addEventListener('unlock', () => {
-    console.log('ロックが解除されました');
-});
+// --- 4. 描画ループ（ここで毎フレーム移動を計算） ---
+const moveSpeed = 0.15; // 歩く速さ
+const velocity = new THREE.Vector3(); // 移動する方向を計算するための変数
 
-// 4. 描画ループ
 function animate() {
     requestAnimationFrame(animate);
+
+    // 移動の計算（W/A/S/Dが押されている間だけ座標を動かす）
+    if (controls.isLocked) {
+        const direction = new THREE.Vector3();
+        const front = new THREE.Vector3();
+        const side = new THREE.Vector3();
+
+        // カメラの向きを取得
+        camera.getWorldDirection(front);
+        front.y = 0; // 上下に飛ばないように
+        front.normalize();
+
+        // 横方向を計算
+        side.crossVectors(front, new THREE.Vector3(0, 1, 0));
+
+        // 実際に座標を足し算する
+        if (keys.w) camera.position.addScaledVector(front, moveSpeed);
+        if (keys.s) camera.position.addScaledVector(front, -moveSpeed);
+        if (keys.a) camera.position.addScaledVector(side, -moveSpeed);
+        if (keys.d) camera.position.addScaledVector(side, moveSpeed);
+    }
+
     renderer.render(scene, camera);
 }
+
 animate();
+
+// リサイズ対応
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
