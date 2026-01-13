@@ -76,6 +76,41 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// --- 5. 射撃と反動のシステム ---
+let recoilAmount = 0; // 現在の反動の蓄積
+
+function shoot() {
+    // 1. 弾道の作成（細長い光る棒）
+    const tracerGeo = new THREE.BoxGeometry(0.01, 0.01, 10);
+    const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // 白い弾道
+    const tracer = new THREE.Mesh(tracerGeo, tracerMat);
+
+    // 2. カメラの位置と向きに合わせる
+    camera.getWorldDirection(new THREE.Vector3()); // 方向更新用
+    tracer.position.copy(camera.position);
+    tracer.quaternion.copy(camera.quaternion);
+    tracer.translateZ(-5); // 自分の少し前から飛ばす
+
+    scene.add(tracer);
+
+    // 3. 反動（リコイル）: 撃つたびに視点を少し上に向ける
+    camera.rotation.x += 0.02; 
+    recoilAmount += 0.05; // 撃ち続けると蓄積する（後で散弾計算に使えるよ）
+
+    // 4. 0.05秒後に弾道を消す（残像効果）
+    setTimeout(() => {
+        scene.remove(tracer);
+    }, 50);
+}
+
+// マウスをクリックした時のイベント
+document.addEventListener('mousedown', (e) => {
+    // 左クリック(0)かつロック中なら発射
+    if (controls.isLocked && e.button === 0) {
+        shoot();
+    }
+});
+
 animate();
 
 // リサイズ対応
