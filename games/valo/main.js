@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
-// --- 1. 世界の基本セットアップ ---
+// --- 1. 世界のセットアップ ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
@@ -12,13 +12,14 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// --- 2. ライトとマップ（地面・箱） ---
+// --- 2. ライトとマップ ---
 const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
 scene.add(light);
 
 const gridHelper = new THREE.GridHelper(100, 100);
 scene.add(gridHelper);
 
+// テスト用の箱
 for (let i = 0; i < 20; i++) {
     const size = Math.random() * 2 + 1;
     const geometry = new THREE.BoxGeometry(size, size, size);
@@ -28,92 +29,87 @@ for (let i = 0; i < 20; i++) {
     scene.add(testBox);
 }
 
-// --- 3. 操作の設定（視点とキーボード） ---
+// --- 3. 操作の設定 ---
 const controls = new PointerLockControls(camera, document.body);
 document.addEventListener('click', () => { controls.lock(); });
 
-// キーボードの状態を記録する箱
 const keys = { w: false, a: false, s: false, d: false };
+document.addEventListener('keydown', (e) => { if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true; });
+document.addEventListener('keyup', (e) => { if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false; });
 
-// キーが押されたら true、離されたら false にする
-document.addEventListener('keydown', (e) => { 
-    const key = e.key.toLowerCase();
-    if (key in keys) keys[key] = true;
-});
-document.addEventListener('keyup', (e) => { 
-    const key = e.key.toLowerCase();
-    if (key in keys) keys[key] = false;
-});
-
-// --- 4. 描画ループ（ここで毎フレーム移動を計算） ---
-const moveSpeed = 0.15; // 歩く速さ
-const velocity = new THREE.Vector3(); // 移動する方向を計算するための変数
+// --- 4. 描画ループと修正ポイント ---
+const moveSpeed = 0.15;
+let recoilOffset = 0; // 反動でズレている量
 
 function animate() {
     requestAnimationFrame(animate);
 
-    // 移動の計算（W/A/S/Dが押されている間だけ座標を動かす）
     if (controls.isLocked) {
-        const direction = new THREE.Vector3();
         const front = new THREE.Vector3();
         const side = new THREE.Vector3();
 
-        // カメラの向きを取得
+        // 【修正】カメラの向きを正しく取得（反動を含まない水平ベクトル）
         camera.getWorldDirection(front);
-        front.y = 0; // 上下に飛ばないように
+        front.y = 0;
         front.normalize();
-
-        // 横方向を計算
         side.crossVectors(front, new THREE.Vector3(0, 1, 0));
 
-        // 実際に座標を足し算する
         if (keys.w) camera.position.addScaledVector(front, moveSpeed);
         if (keys.s) camera.position.addScaledVector(front, -moveSpeed);
         if (keys.a) camera.position.addScaledVector(side, -moveSpeed);
         if (keys.d) camera.position.addScaledVector(side, moveSpeed);
+
+        // 【修正】反動をじわじわ戻す（リカバリー）
+        if (recoilOffset > 0) {
+            const recovery = 0.005; // 戻るスピード
+            recoilOffset -= recovery;
+            camera.rotation.x -= recovery;
+        }
     }
 
     renderer.render(scene, camera);
 }
 
-// --- 5. 射撃と反動のシステム ---
-let recoilAmount = 0; // 現在の反動の蓄積
-
+// --- 5. 射撃システム ---
 function shoot() {
-    // 1. 弾道の作成（細長い光る棒）
-    const tracerGeo = new THREE.BoxGeometry(0.01, 0.01, 10);
-    const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // 白い弾道
+    // 【修正】弾道の作成（MeshBasicMaterialだと光って見えるように）
+    const tracerGeo = new THREE.BoxGeometry(0.02, 0.02, 20); // 少し太く長く
+    const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // 黄色が見えやすい
     const tracer = new THREE.Mesh(tracerGeo, tracerMat);
 
-    // 2. カメラの位置と向きに合わせる
-    camera.getWorldDirection(new THREE.Vector3()); // 方向更新用
+    // 【修正】弾道の位置と回転をカメラに同期
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    
     tracer.position.copy(camera.position);
+    // 弾道を少し下にずらす（銃の銃口位置に合わせるための予備）
+    tracer.position.y -= 0.1; 
+    
+    // カメラの回転をコピー
     tracer.quaternion.copy(camera.quaternion);
-    tracer.translateZ(-5); // 自分の少し前から飛ばす
+    // 弾道の中心を前方にずらす
+    tracer.translateZ(-10); 
 
     scene.add(tracer);
 
-    // 3. 反動（リコイル）: 撃つたびに視点を少し上に向ける
-    camera.rotation.x += 0.02; 
-    recoilAmount += 0.05; // 撃ち続けると蓄積する（後で散弾計算に使えるよ）
+    // 【修正】反動の蓄積
+    const punch = 0.02;
+    camera.rotation.x += punch;
+    recoilOffset += punch;
 
-    // 4. 0.05秒後に弾道を消す（残像効果）
     setTimeout(() => {
         scene.remove(tracer);
-    }, 50);
+        tracerGeo.dispose();
+        tracerMat.dispose();
+    }, 40);
 }
 
-// マウスをクリックした時のイベント
 document.addEventListener('mousedown', (e) => {
-    // 左クリック(0)かつロック中なら発射
-    if (controls.isLocked && e.button === 0) {
-        shoot();
-    }
+    if (controls.isLocked && e.button === 0) shoot();
 });
 
 animate();
 
-// リサイズ対応
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
