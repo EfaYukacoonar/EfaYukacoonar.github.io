@@ -76,65 +76,80 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// --- 5. 射撃と反動のシステム ---
-let recoilRecovery = 0; // 戻るべき回転量
+// --- 5. VALORANT風リコイル・スプレーシステム ---
+let shotCount = 0;       // 連続射撃数
+let lastShotTime = 0;    // 最後に撃った時間（指切り判定用）
+let recoilX = 0;         // 左右の反動蓄積
+let recoilY = 0;         // 上下の反動蓄積
 
 function shoot() {
+    const now = Date.now();
+    // 0.2秒以上間隔が空いたら射撃カウントをリセット（指切り対応）
+    if (now - lastShotTime > 200) {
+        shotCount = 0;
+    }
+    lastShotTime = now;
+    shotCount++;
+
     // 1. 弾道の作成
-    const tracerGeo = new THREE.BoxGeometry(0.01, 0.01, 20); // 少し長めに
-    const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+    const tracerGeo = new THREE.BoxGeometry(0.008, 0.008, 15);
+    const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.9 });
     const tracer = new THREE.Mesh(tracerGeo, tracerMat);
 
-    // 2. カメラの「現在」の向きを完全にコピー
+    // 2. 弾の拡散（スプレー）計算
+    // 撃ち続けるほどランダムな広がり（拡散）を大きくする
+    const spreadMultiplier = Math.min(shotCount * 0.005, 0.1); 
+    const spreadX = (Math.random() - 0.5) * spreadMultiplier;
+    const spreadY = (Math.random() - 0.5) * spreadMultiplier;
+
+    // 3. 弾道の向きを設定
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     
-    // 弾道の位置をカメラ位置に
-    tracer.position.copy(camera.position);
-    // 弾道をカメラの向きに回転させる
-    tracer.lookAt(camera.position.clone().add(direction));
-    // 弾道を自分の少し前方へ配置（めり込み防止）
-    tracer.translateZ(-10); 
+    // 視点の向きに拡散（スプレー）を加える
+    direction.x += spreadX;
+    direction.y += spreadY;
+    direction.normalize();
 
+    tracer.position.copy(camera.position);
+    tracer.lookAt(camera.position.clone().add(direction));
+    tracer.translateZ(-7.5);
     scene.add(tracer);
 
-    // 3. 反動（リコイル）
-    // 瞬発的に上に向ける
-    const recoilForce = 0.03;
-    camera.rotation.x += recoilForce;
-    recoilRecovery += recoilForce; // 後で戻すために蓄積
+    // 4. 視点の跳ね上がり（リコイル）
+    // 最初の方は上へ、撃ち続けると少し左右に振る
+    const upForce = shotCount < 5 ? 0.02 : 0.005; // 最初の数発はガツンと上がる
+    const sideForce = shotCount > 5 ? (Math.random() - 0.5) * 0.02 : 0; // 5発目以降は横ブレ
 
-    // 4. 0.03秒後に弾道を消す（もっと短くすると「光」っぽくなる）
+    camera.rotation.x += upForce;
+    camera.rotation.y += sideForce;
+    
+    // 蓄積量（戻す用）
+    recoilY += upForce;
+    recoilX += sideForce;
+
     setTimeout(() => { scene.remove(tracer); }, 30);
 }
 
-// 毎フレームの更新処理（animate関数の中で使う）
+// 毎フレームの更新処理（animate関数の中で呼ぶ）
 function updateRecoil() {
-    if (recoilRecovery > 0) {
-        const recoverSpeed = 0.005; // 戻る速さ
-        camera.rotation.x -= recoverSpeed;
-        recoilRecovery -= recoverSpeed;
+    // 撃っていない時にゆっくり戻す
+    if (Date.now() - lastShotTime > 150) {
+        const recoverSpeed = 0.004;
         
-        if (recoilRecovery < 0) {
-            camera.rotation.x -= recoilRecovery; // 行き過ぎを補正
-            recoilRecovery = 0;
+        if (recoilY > 0) {
+            const step = Math.min(recoilY, recoverSpeed);
+            camera.rotation.x -= step;
+            recoilY -= step;
+        }
+        if (Math.abs(recoilX) > 0) {
+            const step = Math.sign(recoilX) * Math.min(Math.abs(recoilX), recoverSpeed);
+            camera.rotation.y -= step;
+            recoilX -= step;
         }
     }
 }
 
-// --- 【重要】animate関数の中身を書き換え ---
-function animate() {
-    requestAnimationFrame(animate);
-
-    if (controls.isLocked) {
-        // ... (移動の計算はそのまま) ...
-        
-        // 追加：反動をゆっくり戻す
-        updateRecoil();
-    }
-
-    renderer.render(scene, camera);
-}
 
 animate();
 
