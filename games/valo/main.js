@@ -1,121 +1,88 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
-// --- 1. 世界の基本セットアップ ---
+// --- 1. 基本セットアップ ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-// --- プレイヤーのステータス管理（追加） ---
-const player = {
-    height: 1.6,
-    crouchHeight: 0.8,
-    isCrouching: false,
-    canJump: true,
-    velocity: new THREE.Vector3(),
-    speed: 0.15
-};
-camera.position.y = player.height;
-
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// --- 2. ライトとマップ ---
-const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
-scene.add(light);
-const gridHelper = new THREE.GridHelper(100, 100);
-scene.add(gridHelper);
-
-for (let i = 0; i < 20; i++) {
-    const size = Math.random() * 2 + 1;
-    const geometry = new THREE.BoxGeometry(size, size, size);
-    const material = new THREE.MeshPhongMaterial({ color: Math.random() * 0xffffff });
-    const testBox = new THREE.Mesh(geometry, material);
-    testBox.position.set((Math.random() - 0.5) * 40, size / 2, (Math.random() - 0.5) * 40);
-    scene.add(testBox);
-}
+// --- 2. プレイヤーの物理パラメータ ---
+const player = {
+    height: 1.6,
+    crouchHeight: 0.8,
+    isCrouching: false,
+    canJump: false,
+    velocity: new THREE.Vector3(),
+    speed: 0.15
+};
 
 // --- 3. 操作の設定 ---
 const controls = new PointerLockControls(camera, document.body);
+scene.add(controls.getObject()); // カメラをコントロールオブジェクトとしてシーンに追加
+
 document.addEventListener('click', () => { controls.lock(); });
 
 const keys = { w: false, a: false, s: false, d: false, isMoving: false };
 
-document.addEventListener('keydown', (e) => { 
+document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
-    if (key in keys) keys[key] = true;
-    
-    // ジャンプ（スペースキー）
+    if (key === 'w') keys.w = true;
+    if (key === 'a') keys.a = true;
+    if (key === 's') keys.s = true;
+    if (key === 'd') keys.d = true;
+
     if (e.code === 'Space' && player.canJump) {
-        player.velocity.y += 0.15;
+        player.velocity.y += 0.15; // ジャンプ力
         player.canJump = false;
     }
-    // しゃがみ（Ctrlキー）
-    if (e.code === 'ControlLeft') {
+    if (e.code === 'ControlLeft' || e.key === 'Control') {
         player.isCrouching = true;
-        player.speed = 0.07; // しゃがみ歩きは遅く
+        player.speed = 0.07;
     }
 });
 
-document.addEventListener('keyup', (e) => { 
+document.addEventListener('keyup', (e) => {
     const key = e.key.toLowerCase();
-    if (key in keys) keys[key] = false;
+    if (key === 'w') keys.w = false;
+    if (key === 'a') keys.a = false;
+    if (key === 's') keys.s = false;
+    if (key === 'd') keys.d = false;
 
-    if (e.code === 'ControlLeft') {
+    if (e.code === 'ControlLeft' || e.key === 'Control') {
         player.isCrouching = false;
         player.speed = 0.15;
     }
 });
 
-// マウスクリックで発射
-document.addEventListener('mousedown', (e) => {
-    if (controls.isLocked && e.button === 0) shoot();
+// マウスダウンで射撃
+window.addEventListener('mousedown', (e) => {
+    // PointerLockが有効な時だけ撃てる
+    if (controls.isLocked) {
+        shoot();
+    }
 });
 
-// --- 4. 描画ループ（移動と物理計算） ---
-function animate() {
-    requestAnimationFrame(animate);
+// --- 4. 地面とターゲットの作成 ---
+const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
+scene.add(light);
+scene.add(new THREE.GridHelper(100, 100));
 
-    if (controls.isLocked) {
-        // --- 移動計算 ---
-        const front = new THREE.Vector3();
-        const side = new THREE.Vector3();
-        camera.getWorldDirection(front);
-        front.y = 0;
-        front.normalize();
-        side.crossVectors(front, new THREE.Vector3(0, 1, 0));
-
-        // 移動しているかどうかの判定
-        keys.isMoving = keys.w || keys.s || keys.a || keys.d;
-
-        if (keys.w) camera.position.addScaledVector(front, player.speed);
-        if (keys.s) camera.position.addScaledVector(front, -player.speed);
-        if (keys.a) camera.position.addScaledVector(side, -player.speed);
-        if (keys.d) camera.position.addScaledVector(side, player.speed);
-
-        // --- ジャンプ・重力・しゃがみ高さの物理計算 ---
-        player.velocity.y -= 0.005; // 重力
-        camera.position.y += player.velocity.y;
-
-        const targetHeight = player.isCrouching ? player.crouchHeight : player.height;
-        
-        // 地面判定
-        if (camera.position.y < targetHeight) {
-            camera.position.y = targetHeight;
-            player.velocity.y = 0;
-            player.canJump = true;
-        }
-
-        // --- リコイルの回復 ---
-        updateRecoil();
-    }
-
-    renderer.render(scene, camera);
+for (let i = 0; i < 20; i++) {
+    const size = Math.random() * 2 + 1;
+    const box = new THREE.Mesh(
+        new THREE.BoxGeometry(size, size, size),
+        new THREE.MeshPhongMaterial({ color: Math.random() * 0xffffff })
+    );
+    box.position.set((Math.random() - 0.5) * 40, size / 2, (Math.random() - 0.5) * 40);
+    scene.add(box);
 }
 
-// --- 5. VALORANT風リコイル・スプレーシステム（強化版） ---
+// --- 5. 射撃・リコイルシステム ---
 let shotCount = 0;
 let lastShotTime = 0;
 let recoilX = 0;
@@ -127,62 +94,70 @@ function shoot() {
     lastShotTime = now;
     shotCount++;
 
-    // 1. 弾道の作成
-    const tracerGeo = new THREE.BoxGeometry(0.008, 0.008, 15);
-    const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.9 });
+    // トレーサー（弾道）の作成
+    const tracerGeo = new THREE.BoxGeometry(0.01, 0.01, 20);
+    const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
     const tracer = new THREE.Mesh(tracerGeo, tracerMat);
 
-    // 2. VALORANT風：状況に応じた拡散（スプレー）計算
-    let baseSpread = Math.min(shotCount * 0.005, 0.1); 
-    
-    // ジャンプ中なら激しくバラける
-    if (!player.canJump) baseSpread += 0.1;
-    // 移動中なら少しバラける
-    else if (keys.isMoving) baseSpread += 0.03;
-    // しゃがみ中なら精度アップ
-    if (player.isCrouching) baseSpread *= 0.5;
+    // 拡散（スプレー）計算
+    let spread = Math.min(shotCount * 0.01, 0.1);
+    if (!player.canJump) spread += 0.1; // ジャンプ中はガバガバ
+    else if (keys.w || keys.a || keys.s || keys.d) spread += 0.03; // 移動中
+    if (player.isCrouching) spread *= 0.5; // しゃがみは正確
 
-    const spreadX = (Math.random() - 0.5) * baseSpread;
-    const spreadY = (Math.random() - 0.5) * baseSpread;
-
-    // 3. 向きの設定
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
-    direction.x += spreadX;
-    direction.y += spreadY;
+    direction.x += (Math.random() - 0.5) * spread;
+    direction.y += (Math.random() - 0.5) * spread;
     direction.normalize();
 
     tracer.position.copy(camera.position);
     tracer.lookAt(camera.position.clone().add(direction));
-    tracer.translateZ(-7.5);
+    tracer.translateZ(-10);
     scene.add(tracer);
 
-    // 4. 反動（リコイル）
-    const upForce = shotCount < 5 ? 0.02 : 0.005;
-    const sideForce = shotCount > 5 ? (Math.random() - 0.5) * 0.02 : 0;
+    // 反動（カメラを直接回さず、数値だけ蓄積してupdateRecoilで処理）
+    recoilY += (shotCount < 5 ? 0.02 : 0.005);
+    recoilX += (shotCount > 5 ? (Math.random() - 0.5) * 0.02 : 0);
 
-    camera.rotation.x += upForce;
-    camera.rotation.y += sideForce;
-    recoilY += upForce;
-    recoilX += sideForce;
-
-    setTimeout(() => { scene.remove(tracer); }, 30);
+    setTimeout(() => { scene.remove(tracer); }, 40);
 }
 
-function updateRecoil() {
-    if (Date.now() - lastShotTime > 150) {
-        const recoverSpeed = 0.004;
-        if (recoilY > 0) {
-            const step = Math.min(recoilY, recoverSpeed);
-            camera.rotation.x -= step;
-            recoilY -= step;
+// --- 6. アニメーションループ ---
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (controls.isLocked) {
+        // 移動
+        if (keys.w) controls.moveForward(player.speed);
+        if (keys.s) controls.moveForward(-player.speed);
+        if (keys.a) controls.moveRight(-player.speed);
+        if (keys.d) controls.moveRight(player.speed);
+
+        // 重力とジャンプ
+        player.velocity.y -= 0.008; // 重力強め
+        controls.getObject().position.y += player.velocity.y;
+
+        // しゃがみと地面判定
+        const currentTargetHeight = player.isCrouching ? player.crouchHeight : player.height;
+        if (controls.getObject().position.y < currentTargetHeight) {
+            controls.getObject().position.y = currentTargetHeight;
+            player.velocity.y = 0;
+            player.canJump = true;
         }
-        if (Math.abs(recoilX) > 0) {
-            const step = Math.sign(recoilX) * Math.min(Math.abs(recoilX), recoverSpeed);
-            camera.rotation.y -= step;
-            recoilX -= step;
+
+        // リコイルの適用と回復
+        if (recoilY > 0 || Math.abs(recoilX) > 0) {
+            camera.rotation.x += recoilY * 0.1; // じわっと上げる
+            camera.rotation.y += recoilX * 0.1;
+            
+            // 回復
+            recoilY *= 0.9; 
+            recoilX *= 0.9;
         }
     }
+
+    renderer.render(scene, camera);
 }
 
 animate();
