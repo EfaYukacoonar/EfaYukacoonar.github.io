@@ -3,16 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Three.js FPS Shooter</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #000; }
-        #crosshair {
-            position: absolute; top: 50%; left: 50%;
-            width: 10px; height: 10px;
-            border: 2px solid lime; border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-    </style>
 </head>
 <body>
     <div id="crosshair"></div>
