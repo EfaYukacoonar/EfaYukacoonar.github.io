@@ -12,7 +12,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// --- 2. 変数宣言（先にまとめておくのがコツ！） ---
+// --- 2. 変数宣言 ---
 let isMenuOpen = false; // エラー回避のために上に持ってきたよ
 let shotCount = 0;
 let lastShotTime = 0;
