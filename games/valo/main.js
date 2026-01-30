@@ -1,21 +1,3 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>Three.js FPS Shooter</title>
-</head>
-<body>
-    <div id="crosshair"></div>
-    
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/examples/jsm/controls/PointerLockControls": "https://unpkg.com/three@0.160.0/examples/jsm/controls/PointerLockControls.js"
-            }
-        }
-    </script>
-
     <script type="module">
         import * as THREE from 'three';
         import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
