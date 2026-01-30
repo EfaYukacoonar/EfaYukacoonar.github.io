@@ -1,0 +1,48 @@
+body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #72729e;
+      }
+
+      #crosshair {
+        position: fixed; /* absoluteからfixedに変更 */
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      /* 上下（縦線） */
+      #crosshair::before {
+        content: "";
+        position: absolute;
+        width: 1px;
+        height: 4px;
+        background: white;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) translateY(-5px); 
+        box-shadow:
+          0 0 0 1px black,
+          0 10px 0 0 white,
+          0 10px 0 1px black;
+      }
+
+      /* 左右（横線） */
+      #crosshair::after {
+        content: "";
+        position: absolute;
+        width: 4px;
+        height: 1px;
+        background: white;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) translateX(-5px);
+        box-shadow:
+          0 0 0 1px black,
+          10px 0 0 0 white,
+          10px 0 0 1px black;
+      }
