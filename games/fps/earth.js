@@ -59,3 +59,5 @@ export function getAirDensity(alt, env) {
 
     return density;
 }
+
+export const EARTH_AXIS_TILT = 23.439;
