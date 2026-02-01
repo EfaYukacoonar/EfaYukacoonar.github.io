@@ -20,14 +20,14 @@ Commercial use of the Code is strictly prohibited.
 (regardless of intent)
 
 
-If you wish to use the Code for commercial purposes, you must contact EfaYukacoonar in advance and obtain written permission.
+If you wish to use the Code for commercial purposes, you must contact *EfaYukacoonar* in advance and obtain written permission.
 
 ## Contributions
 
 Copyright for contributions (such as pull requests) remains with the contributor.
-However, contributors are deemed to grant EfaYukacoonar a non‑exclusive, royalty‑free license to use, modify, and redistribute their contributions within this repository.
+However, contributors are deemed to grant *EfaYukacoonar* a non‑exclusive, royalty‑free license to use, modify, and redistribute their contributions within this repository.
 
 ## Disclaimer
 
 The Code is provided “as is,” without any warranties of any kind.
-EfaYukacoonar assumes no responsibility for any damages arising from the use of the Code.
+*EfaYukacoonar* assumes no responsibility for any damages arising from the use of the Code.
