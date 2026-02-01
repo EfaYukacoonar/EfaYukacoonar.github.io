@@ -1,11 +1,11 @@
 const API_KEY = '6ad7c3b262384cf1ac9133000260102';
 // till 2026-02-15
 export async function getEnvironmentData(lat, lon) {
-    const url = 'https://api.weatherapi.com/vl/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=1&aqi=no&alerts=no';
+    const url = `https://api.weatherapi.com/vl/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=1&aqi=no&alerts=no`;
     try {
-        const respons = await fetch(url);
-        if (!respons.ok) throw new console.error('Failed the API requeat');
-        const data = await respons.json();
+        const response = await fetch(url);
+        if (!response.ok) throw new console.error('Failed the API requeat');
+        const data = await response.json();
         return {
             temp: data.current.temp_c,
             pressure: data.current.pressure_mb,
