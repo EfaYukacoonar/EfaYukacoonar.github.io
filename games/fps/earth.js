@@ -54,11 +54,8 @@ export function getAirDensiny(alt, env) {
     const es = 6.11 * Math.pow(10, (7.5 * tc) / (tc + 237.3));
     const e = (env.humidity / 100) * es;
 
-    rho = (P * 100) / (Rd * Tv)
-    Rd = 287.058
-    Tv = T / (1 - (e / P) * (1 - 0.622));
-    const Tv = T / (1 - (e / P) * 0.378);
-    const density = (P * 100) / (287.058 * Tv);
+    const virtualTemp = T / (1 - (e / P) * 0.378);
+    const density = (P * 100) / (287.058 * virtualTemp);
 
     return density;
 }
