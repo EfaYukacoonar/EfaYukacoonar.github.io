@@ -13,10 +13,10 @@ const WGS84 = {
 
 export function geoToECEF(lat, lon, alt) {
     const radLat = lat * Math.PI / 180;
-    const radLat = lon * Math.PI / 180;
+    const radLon = lon * Math.PI / 180;
     const N = WGS84.a / Math.sqrt(1 - WGS84.e2 * Math.sin(radLat)**2);
-    const x = (N + alt) * Math.cos(radLat) * Math.cos(radLat);
-    const y = (N + alt) * Math.cos(radLat) * Math.sin(radLat);
+    const x = (N + alt) * Math.cos(radLat) * Math.cos(radLon);
+    const y = (N + alt) * Math.cos(radLat) * Math.sin(radLon);
     const z = (N * (1 - WGS84.e2) + alt) * Math.sin(radLat);
 
     return {x, y, z};
