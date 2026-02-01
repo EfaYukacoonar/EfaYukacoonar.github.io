@@ -2,7 +2,7 @@
 
 ## Copyright
 
-All code, files, documents, and other materials contained in this repository (“the Code”) are the copyright of EfaYukacoonar (the owner of this account).
+All code, files, documents, and other materials contained in this repository (“the Code”) are the copyright of *EfaYukacoonar* (the owner of this account).
 
 ## Non‑Commercial Use
 
