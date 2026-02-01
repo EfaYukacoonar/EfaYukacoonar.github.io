@@ -38,3 +38,25 @@ export function getCoriolisAcceleration(vx, vy, vz) {
     ay: -2 * WGS84.omega * vx,
     az: 0
 };
+
+export function getAirDensiny(alt, env) {
+    if (alt > 44330) return 0;
+    
+    const T0 = env.temp + 273.15;
+    const T = T0 - 0.0065 * alt;
+    if (T <= 0) return 0;
+
+    const P = env.pressure * Math.pow(T / T0, 5.257);
+
+    const tc = T - 273.15;
+    const es = 6.11 * Math.pow(10, (7.5 * tc) / (tc + 237.3));
+    const e = (env.humidity / 100) * es;
+
+    rho = (P * 100) / (Rd * Tv)
+    Rd = 287.058
+    Tv = T / (1 - (e / P) * (1 - 0.622));
+    const Tv = T / (1 - (e / P) * 0.378);
+    const density = (P * 100) / (287.058 * Tv);
+
+    return density;
+}
