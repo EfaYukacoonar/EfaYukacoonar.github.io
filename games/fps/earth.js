@@ -34,10 +34,12 @@ export function getNormalGravity(lat) {
 }
 
 export function getCoriolisAcceleration(vx, vy, vz) {
-    ax: 2 * WGS84.omega * vy,
-    ay: -2 * WGS84.omega * vx,
-    az: 0
-};
+    return{
+        ax: 2 * WGS84.omega * vy,
+        ay: -2 * WGS84.omega * vx,
+        az: 0
+    };
+}
 
 export function getAirDensiny(alt, env) {
     if (alt > 44330) return 0;
