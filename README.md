@@ -6,8 +6,8 @@ All code, files, documents, and other materials contained in this repository (�
 
 ## Non‑Commercial Use
 
-You are permitted to copy, modify, and use the Code for non‑commercial purposes only.
-“Non‑commercial” refers to any use that does not generate revenue, profit, or compensation, whether directly or indirectly.
+You are permitted to copy, modify, and use the Code **for non‑commercial purposes only**.
+“Non‑commercial” refers to any use that does **not** generate revenue, profit, or compensation, whether directly or indirectly.
 
 ## Prohibition of Commercial Use
 
