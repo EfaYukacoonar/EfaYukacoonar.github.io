@@ -32,3 +32,9 @@ export function getNormalGravity(lat) {
 
     return g0;
 }
+
+export function getCoriolisAcceleration(vx, vy, vz) {
+    ax: 2 * WGS84.omega * vy,
+    ay: -2 * WGS84.omega * vx,
+    az: 0
+};
