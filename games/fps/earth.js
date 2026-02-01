@@ -41,7 +41,7 @@ export function getCoriolisAcceleration(vx, vy, vz) {
     };
 }
 
-export function getAirDensiny(alt, env) {
+export function getAirDensity(alt, env) {
     if (alt > 44330) return 0;
     
     const T0 = env.temp + 273.15;
