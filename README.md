@@ -30,4 +30,4 @@ However, contributors are deemed to grant EfaYukacoonar a non‑exclusive, royal
 ##Disclaimer
 
 The Code is provided “as is,” without any warranties of any kind.
-EfaYukacoonar assumes no responsibility for any damages arising from the use of the Code.
+EfaYukacoonar assumes no responsibility for any damages arising from the use of the Code
