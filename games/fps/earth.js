@@ -80,7 +80,7 @@ export function getAirDensity(alt, env) {
         {
             h: 47000,
             L: 0,
-            T: 270.65
+            T: 270.65,
             P: 110.91 * pressureScale
         },
         {
@@ -97,22 +97,34 @@ export function getAirDensity(alt, env) {
         }
     ];
 
-    if (alt > 44330) return 0;
-    
-    const T0 = env.temp + 273.15;
-    const T = T0 - 0.0065 * alt;
-    if (T <= 0) return 0;
+    if (alt < 0) alt = 0;
+    if (alt > 84000) return 0;
 
-    const P = env.pressure * Math.pow(T / T0, 5.257);
+    let i = 0;
+    while (i < layers.length - 1 && alt > layers[i+1].h) i++;
 
-    const tc = T - 273.15;
-    const es = 6.11 * Math.pow(10, (7.5 * tc) / (tc + 237.3));
-    const e = (env.humidity / 100) * es;
+    const layer = layers[i];
+    const dh = alt - layer.h;
+    let T, P;
 
-    const virtualTemp = T / (1 - (e / P) * 0.378);
-    const density = (P * 100) / (287.058 * virtualTemp);
+    if (layer.L === 0) {
+        T = layer.T;
+        P = layer.P * Math.exp(-g0 * dh / (R * T));
+    }
+    else{
+        T = layer.T + layer.L * dh;
+        P = layer.P * Math.pow(T / layer.T, -g0 / (layer.L * R));
+    }
 
-    return density;
+    let virtualTemp = T;
+    if (i === 0) {
+        const tc = T - 273.15;
+        const es = 6.11 * Math.pow(10, (7.5 * tc) / (tc + 237.3));
+        const e = (env.humidity / 100) * es;
+        virtualTemp = T / (1 - (e / P) * 0.378);
+    }
+
+    return P / (R * virtualTemp)
 }
 
 export const EARTH_AXIS_TILT = 23.439;
