@@ -4,7 +4,7 @@ export async function getEnvironmentData(lat, lon) {
     const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=1&aqi=no&alerts=no`;
     try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed the API requeat');
+        if (!response.ok) throw new Error('Failed the API request');
         const data = await response.json();
         return {
             temp: data.current.temp_c,
@@ -31,7 +31,7 @@ export async function getEnvironmentData(lat, lon) {
                 deg: 0
             },
             sun: {
-                unrise: "06:00 AM",
+                sunrise: "06:00 AM",
                 sunset: "06:00 PM"
             }
         };
