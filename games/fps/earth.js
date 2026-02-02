@@ -33,6 +33,11 @@ export function getNormalGravity(lat) {
     return g0;
 }
 
+export function getGravityAtAltitude(lat, alt) {
+    const g0 = getNormalGravity(lat);
+    return g0 * Math.pow(WGS84.a / (WGS84.a + alt), 2);
+}
+
 export function getCoriolisAcceleration(vx, vy, vz) {
     return{
         ax: 2 * WGS84.omega * vy,
@@ -42,6 +47,15 @@ export function getCoriolisAcceleration(vx, vy, vz) {
 }
 
 export function getAirDensity(alt, env) {
+    const R = 287.058;
+    const g0 = 9.80665;
+
+    const pressureScale = env.pressure / 1013.25;
+
+    const layers = [
+        {h: 0, L: -0.0065, T: env.temp + 273.15, P: (env.pressure * 100)},
+        {h: 11000, L: 0, T: 216.65, P: 22632.1 * pressureScale },
+    ]
     if (alt > 44330) return 0;
     
     const T0 = env.temp + 273.15;
