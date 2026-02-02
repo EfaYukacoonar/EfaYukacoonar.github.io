@@ -53,9 +53,50 @@ export function getAirDensity(alt, env) {
     const pressureScale = env.pressure / 1013.25;
 
     const layers = [
-        {h: 0, L: -0.0065, T: env.temp + 273.15, P: (env.pressure * 100)},
-        {h: 11000, L: 0, T: 216.65, P: 22632.1 * pressureScale },
-    ]
+        {
+            h: 0,
+            L: -0.0065,
+            T: env.temp + 273.15,
+            P: (env.pressure * 100)
+        },
+        {
+            h: 11000,
+            L: 0,
+            T: 216.65,
+            P: 22632.1 * pressureScale
+        },
+        {
+            h: 20000,
+            L: 0.001,
+            T: 216.65,
+            P: 5474.89 * pressureScale
+        },
+        {
+            h: 32000,
+            L: 0.0028,
+            T: 228.65,
+            P: 868.02 * pressureScale
+        },
+        {
+            h: 47000,
+            L: 0,
+            T: 270.65
+            P: 110.91 * pressureScale
+        },
+        {
+            h: 51000,
+            L: -0.0028,
+            T: 270.65,
+            P: 66.94 * pressureScale
+        },
+        {
+            h: 71000,
+            L: -0.002,
+            T: 214.65,
+            P: 3.96 * pressureScale
+        }
+    ];
+
     if (alt > 44330) return 0;
     
     const T0 = env.temp + 273.15;
