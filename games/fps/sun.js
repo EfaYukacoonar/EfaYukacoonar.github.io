@@ -23,7 +23,7 @@ export class Sun {
         //Azimuth Angle
         const cosAs = (Math.sin(radDec) - Math.sin(altAngle) * Math.sin(radLat)) / (Math.cos(altAngle) * Math.cos(radLat));
         const asAngle = Math.acos(Math.max(-1, Math.min(1, cosAs)));
-        //
+        //Calculation Of Directional Vectors
         const x = Math.cos(altAngle) * Math.sin(radHA);
         const y = Math.sin(altAngle);
         const z = Math.cos(altAngle) * Math.cos(radHA);
