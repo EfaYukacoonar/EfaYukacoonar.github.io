@@ -128,3 +128,11 @@ export function getAirDensity(alt, env) {
 }
 
 export const EARTH_AXIS_TILT = 23.439;
+
+export function getSpeedOfSound(alt, env) {
+    const gamma = 1.4;
+    const R = 287.058;
+    let T = (env.temp + 273.15) - (0.0065 * alt);
+    if (alt > 11000) T = 216.65;
+    return Math.sqrt(gamma * R * T);
+}
