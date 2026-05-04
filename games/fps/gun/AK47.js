@@ -1,4 +1,4 @@
-export const AK_ULTIMATE_SPACS = {
+export const AK_ULTIMATE_SPECS = {
     identity: {
         name: "AK-47",
         caliber: "7.62x39mm",
@@ -12,7 +12,7 @@ export const AK_ULTIMATE_SPACS = {
             fullMagWeight: 0.92
         },
         dimensions: {
-            legthOverall: 0.880,
+            lengthOverall: 0.880,
             centerOfMass: {
                 x: 0,
                 y: -0.05,
@@ -29,16 +29,16 @@ export const AK_ULTIMATE_SPACS = {
             portLocation: 0.285,
             gasLeakageRate: 0.02,
             internalFriction: 0.05,
-            recoilSpring: {
-                springConstant: 150,
-                preloadForce: 20.0,
-                travelDistance: 0.11
-            },
-            action: {
-                lockTime: 0.004,
-                boltSlamForce: 12.0,
-                outOfBatteryThreshold: 0.002
-            }
+        }
+        recoilSpring: {
+            springConstant: 150,
+            preloadForce: 20.0,
+            travelDistance: 0.11
+        },
+        action: {
+            lockTime: 0.004,
+            boltSlamForce: 12.0,
+            outOfBatteryThreshold: 0.002
         }
     },
     barrel: {
