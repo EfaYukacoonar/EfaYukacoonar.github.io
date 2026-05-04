@@ -28,8 +28,8 @@ export const AK_ULTIMATE_SPECS = {
             dwellTime: 0.0005,
             portLocation: 0.285,
             gasLeakageRate: 0.02,
-            internalFriction: 0.05,
-        }
+            internalFriction: 0.05
+        },
         recoilSpring: {
             springConstant: 150,
             preloadForce: 20.0,
@@ -55,6 +55,7 @@ export const AK_ULTIMATE_SPECS = {
             heatLimit: 600,
             accuracyDegradation: 0.05
         }
+
     },
     operation: {
         trigger: {
