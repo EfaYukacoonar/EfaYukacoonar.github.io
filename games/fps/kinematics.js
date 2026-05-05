@@ -41,7 +41,7 @@ export const Kinematics = {
         const relativeVel = vel.clone().sub(windVel);
         const speed = relativeVel.length();
         if (speed > 0.1) {
-            const math = speed / soundSpeed;
+            const mach = speed / soundSpeed;
             const cd = this.calculateDragCoefficient(entity.specs.barrel.specs.dragCoefficient ?? 0.3, mach);
             const dragMag = 0.5 * rho * speed * speed * cd * (entity.specs.crossSectionArea ?? 0.000045);
             totalForce.add(relativeVel.clone().normalize().multiplyScalar(-dragMag));
@@ -74,10 +74,10 @@ export const Kinematics = {
         const tempDelta = Math.max(0, currentTemp - 100);
         const tempFactor = 1 + (tempDelta / 100) * specs.barrel.thermals.accuracyDegradation;
         const stdDev = specs.noise.velocityStandardDeviation * (1 + jitterFromTolerance) * tempFactor;
-        const noise = (Mach.random() + Mach.random() + Mach.random() - 1.5) / 1.5;
+        const noise = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
         return baseVelocity * (1 + noise * stdDev);
     },
-    calculateDragCoefficient(BaseCd, math) {
+    calculateDragCoefficient(BaseCd, mach) {
         if (mach < 0.8) return BaseCd;
         if (mach < 1.2) return BaseCd * (1 + 15 * Math.pow(mach - 0.8, 2));
         return BaseCd * 1.5;
