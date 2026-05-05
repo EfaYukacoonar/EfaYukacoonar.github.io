@@ -58,6 +58,42 @@ export const Kinematics = {
         entity.velocity.add(accel.multiplyScalar(dt));
         entity.position.add(entity.velocity.clone().multiplyScalar(dt));
         const moveVec = entity.position.clone().sub(prevPos);
-        const a
+        const moveDist = moveVec.length();
+        if (moveDist > 0 && collidableObjects.length > 0) {
+            this._raycaster.set(prevPos, moveVec.normalize());
+            this._raycaster.far = moveDist;
+            const intersects = this._raycaster.intersectsObjects(collidableObjects, true);
+            if (intersects.length > 0) {
+                entity.position.copy(intersects[0].point);
+                entity.isDestroyed = true;
+                this.onImpact(entity, intersects[0]);
+            }
+        }
+    },
+    calculateMuzzleVelocity(baseVelocity, specs, currentTemp) {
+        const jitterFromTolerance = specs.barrel.specs.mechanicalTolerance * 100;
+        const tempDelta = Math.max(0, currentTemp - 100);
+        const tempFactor = 1 + (tempDelta / 100) * specs.barrel.thermals.accuracyDegradation;
+        const stdDev = specs.noise.velocityStandardDeviation * (1 + jitterFromTolerance) * tempFactor;
+        const noise = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+        return baseVelocity * (1 + noise * stdDev);
+    },
+    calculateDragCoefficient(BaseCd, math) {
+        if (mach < 0.8) return BaseCd;
+        if (mach < 1.2) return BaseCd * (1 + 15 * Math.pow(mach - 0.8, 2));
+        return BaseCd * 1.5;
+    },
+    updateThermals(entity, world, dt) {
+        const specs = entity.specs.barrel.thermals;
+        const sigma = 5.67e-8;
+        const tK = entity.currentTemp + 273.15;
+        const airTK = world.temp + 273.15;
+        const radiationOut = sigma * specs.emissivity * specs.surfaceArea * (Math.pow(tK, 4) - Math.pow(airTK, 4));
+        const convectionOut = specs.convectionCoefficient * specs.surfaceArea * (entity.currentTemp - world.temp);
+        entity.currentTemp -= ((radiationOut + convectionOut) * dt) / (specs.specificHeat * 0.5);
+        if (entity.currentTemp < world.temp) entity.currentTemp = world.temp;
+    },
+    onImpact(entity, intersection) {
+        console.log(`$ {entity.specs.identity.name} impactedat:`, intersection.point);
     }
-}
+};
