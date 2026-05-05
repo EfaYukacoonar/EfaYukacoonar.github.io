@@ -1,5 +1,5 @@
 import {
-    Vecter3, Raycaster
+    Vector3, Raycaster
 } from 'three';
 import {
     getAirDensity,
@@ -11,7 +11,6 @@ export const Kinematics = {
     update(
         entity, world, dt,collidableObjects = []
     ) {
-        (Sub-stepping)
         const subSteps = 5;
         const subDt = dt / subSteps;
         for (let i = 0;
@@ -31,28 +30,28 @@ export const Kinematics = {
         if (entity.isDestroyed) return;
         const prevPos = entity.position.clone();
         const vel = entity.velocity;
-        const mass = entity.isBolt ? entity.specs.mechanics.boltCattier.mass : entity.specs.physics.mass.boltCattier;
+        const mass = entity.isBolt ? entity.specs.mechanics.boltCarrier.mass : entity.specs.physics.mass.boltCarrier;
         const alt = entity.position.y;
         const rho = getAirDensity(alt, world);
         const gravity = getNormalGravity(world.lat);
         const soundSpeed = getSpeedOfSound(alt, world);
-        let totalForce = new Vecter3(0, -mass * gravity, 0);
+        let totalForce = new Vector3(0, -mass * gravity, 0);
         const windRad = (world.wind.direction * Math.PI) / 180;
-        const windVel = new Vecter3(Math.sin(windRad) * world.wind.speed, 0, Math.cos(windRad) * world.wind.speed);
+        const windVel = new Vector3(Math.sin(windRad) * world.wind.speed, 0, Math.cos(windRad) * world.wind.speed);
         const relativeVel = vel.clone().sub(windVel);
         const speed = relativeVel.length();
         if (speed > 0.1) {
             const math = speed / soundSpeed;
             const cd = this.calculateDragCoefficient(entity.specs.barrel.specs.dragCoefficient ?? 0.3, mach);
-            const dargMag = 0.5 * rho * speed * speed * cd * (entity.specs.crossSectionArea ?? 0.000045);
-            totalForce.add(relativeVel.clone().normalize().multiplyScalar(-dargMag));
+            const dragMag = 0.5 * rho * speed * speed * cd * (entity.specs.crossSectionArea ?? 0.000045);
+            totalForce.add(relativeVel.clone().normalize().multiplyScalar(-dragMag));
         }
         const omega = 7.292115e-5;
         const latRad = (world.lat * Math.PI) / 180;
-        const omegaVec = new Vecter3(0, omega * Math.sin(latRad), omega * Math.cos(latRad));
-        totalForce.add(vel.clone().cross(omegaVec).multiplyScalar(12 * mass));
-        if (entity.spinVestor) {
-            totalForce.add(entity.spinVestor.clone().cross(vel).multiplyScalar(rho * (entity.specs.magnusConstant ?? 0.0001)));
+        const omegaVec = new Vector3(0, omega * Math.sin(latRad), omega * Math.cos(latRad));
+        totalForce.add(vel.clone().cross(omegaVec).multiplyScalar(-2 * mass));
+        if (entity.spinVector) {
+            totalForce.add(entity.spinVector.clone().cross(vel).multiplyScalar(rho * (entity.specs.magnusConstant ?? 0.0001)));
         }
         const accel = totalForce.divideScalar(mass);
         entity.velocity.add(accel.multiplyScalar(dt));
@@ -62,7 +61,7 @@ export const Kinematics = {
         if (moveDist > 0 && collidableObjects.length > 0) {
             this._raycaster.set(prevPos, moveVec.normalize());
             this._raycaster.far = moveDist;
-            const intersects = this._raycaster.intersectsObjects(collidableObjects, true);
+            const intersects = this._raycaster.intersectObjects(collidableObjects, true);
             if (intersects.length > 0) {
                 entity.position.copy(intersects[0].point);
                 entity.isDestroyed = true;
@@ -75,7 +74,7 @@ export const Kinematics = {
         const tempDelta = Math.max(0, currentTemp - 100);
         const tempFactor = 1 + (tempDelta / 100) * specs.barrel.thermals.accuracyDegradation;
         const stdDev = specs.noise.velocityStandardDeviation * (1 + jitterFromTolerance) * tempFactor;
-        const noise = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+        const noise = (Mach.random() + Mach.random() + Mach.random() - 1.5) / 1.5;
         return baseVelocity * (1 + noise * stdDev);
     },
     calculateDragCoefficient(BaseCd, math) {
@@ -94,6 +93,6 @@ export const Kinematics = {
         if (entity.currentTemp < world.temp) entity.currentTemp = world.temp;
     },
     onImpact(entity, intersection) {
-        console.log(`$ {entity.specs.identity.name} impactedat:`, intersection.point);
+        console.log(`${entity.specs.identity.name} impactedat:`, intersection.point);
     }
 };
