@@ -1,0 +1,40 @@
+<!-- HTML部分：ヘッダーの構造 -->
+<header class="cyber-header">
+  <div class="menu-btn">≡</div>
+  <div class="logo">efayukacoonar</div>
+  <div class="search-bar">
+    <input type="text" placeholder="Search data...">
+  </div>
+  <div class="home-btn">🏠</div>
+</header>
+/* CSS部分：見た目と動き */
+.cyber-header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.7); /* 黒い半透明 */
+  backdrop-filter: blur(10px);    /* ガラスのようなぼかし */
+  border-bottom: 2px solid #F20789; /* ネオンピンクのライン */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  transition: transform 0.5s ease; /* 吸い込まれるような動き */
+}
+
+/* スクロールで消える動き */
+.header-hidden {
+  transform: translateY(-100%);
+}
+let lastScrollY = window.scrollY;
+const header = document.querySelector('.cyber-header');
+
+window.addEventListener('scroll', () => {
+  if (window.scrollY > lastScrollY) {
+    header.classList.add('header-hidden'); // 下スクロールで隠す
+  } else {
+    header.classList.remove('header-hidden'); // 上スクロールで出す
+  }
+  lastScrollY = window.scrollY;
+});
