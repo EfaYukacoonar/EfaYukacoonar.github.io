@@ -1,76 +1,48 @@
 ---
 layout: none
 ---
+---
+layout: none
+---
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EfaYukacoonar</title>
-  <link rel="stylesheet" href="https://raw.github.com/EfaYukacoonar/EfaYukacoonar.github.io/main/_includes/header.css">
+  
+  <link rel="stylesheet" href="/assets/header/header.css">
+  <link rel="stylesheet" href="/css/signup.css">
+  
+  <link rel="icon" type="image/jpeg" href="/favicon.jpg">
 </head>
 <body>
 
-{% include header.html %}
+  {% include header.html %}
 
-<h1>ホームページ</h1>
-<p>ここにメインの内容を書く！</p>
+  <main style="margin-top: 80px; padding: 20px;">
+    <h1>Efa original</h1>
+    <img src="/favicon.jpg" alt="Logo">
+    
+    <p>about button!!</p>
 
-<script src="https://raw.github.com/EfaYukacoonar/EfaYukacoonar.github.io/main/_includes/header.js"></script>
+    <a href="https://youtube.com/" target="_blank">YouTube</a>
+    
+    <button class="signup">sign up</button>
+  </main>
+
+  <script src="/assets/header/header.js"></script>
+
+  <style>
+    .signup {
+      color: rgb(0, 0, 50);
+      background-color: rgb(50, 0, 0);
+      border: 2px solid rgb(0, 50, 0);
+      height: 50px;
+      width: 150px; /* widgh を width に修正しました */
+      border-radius: 25px;
+      cursor: pointer;
+    }
+  </style>
 </body>
 </html>
-
-
-<html lang="ja">
-    <head>
-        <title>
-            Efa original
-        </title>
-        <link 
-            rel="icon"
-            type="image/jpeg"
-            href="https://raw.githubusercontent.com/EfaYukacoonar/EfaYukacoonar.github.io/main/favicon.jpg">
-        <meta 
-            charset="utf-8">
-        
-        <link 
-            rel="stylesheet" href="https://raw.githubusercontent.com/EfaYukacoonar/EfaYukacoonar.github.io/main/css/signup.css">
-    </head>
-
-
-    <body>
-        <h1>
-            example
-        </h1>
-
-        <img src="https://raw.githubusercontent.com/EfaYukacoonar/EfaYukacoonar.github.io/main/favicon.jpg">
-
-        
-        
-        <p>
-            about button!!
-        </p>
-
-        <a 
-            href="https://youtube.com/"
-            target="_blank">YouTube
-        </a>
-        
-        <button class="signup">
-           sign up
-        </button>
-
-        <style>
-            .signup {
-                color: rgb(0, 0, 50);
-                background-color: rgb(50, 0, 0);
-                border: none;
-                height: 50px;
-                widgh: 150px;
-                border-radius: 25px;
-                border-color: rgb(0, 50, 0);
-                border-style: solid;
-                border-width: 2px;
-                cursor: pointer;
-            }
-        </style>
-    </body>
