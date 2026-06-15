@@ -39,31 +39,46 @@ layout: none
 
 <div id="gold-canvas" style="position:fixed; top:0; left:0; z-index:-1; width:100%; height:100%;"></div>
 
-<canvas id="liquid-acryl" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1;"></canvas>
-<button id="sensor-btn" style="position:fixed; top:80px; left:20px; z-index:9999; background:rgba(0,0,0,0.3); border:1px solid #F20789; color:#F20789; padding:8px; cursor:pointer;">ACTIVATE LIQUID</button>
+<canvas id="liquid-acryl" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;"></canvas>
+<button id="sensor-btn" style="position:fixed; top:80px; left:20px; z-index:9999; background:rgba(0,0,0,0.5); border:1px solid #F20789; color:#F20789; padding:10px; cursor:pointer;">ACTIVATE LIQUID</button>
 
 <script>
 const canvas = document.getElementById('liquid-acryl');
 const ctx = canvas.getContext('2d');
-const particles = [];
-let gravX = 0, gravY = 1; // 下方向への強い重力
+let particles = [];
+let gravX = 0, gravY = 1;
 
-function resize() {
+function init() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  
+  // 画面面積の約30%を埋める計算（1粒子あたり約10x10ピクセルの空間を割り当て）
+  const area = canvas.width * canvas.height;
+  const count = Math.floor((area * 0.3) / 100); 
+  
+  particles = [];
+  for(let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: 0, vy: 0,
+      size: Math.random() * 0.8 + 0.5,
+      color: `hsl(${40 + Math.random()*20}, 90%, 60%)`
+    });
+  }
 }
-window.addEventListener('resize', resize);
-resize();
 
-// センサー許可
+window.addEventListener('resize', init);
+init();
+
 document.getElementById('sensor-btn').addEventListener('click', () => {
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
     DeviceOrientationEvent.requestPermission().then(response => {
       if (response == 'granted') {
         window.addEventListener('deviceorientation', (e) => {
-          // 傾きを重力ベクトルとして計算（上下逆に傾けたら逆流するように調整）
-          gravX = e.gamma / 15;
-          gravY = e.beta / 15;
+          // iPadの向きに合わせて補正（gamma:左右, beta:前後）
+          gravX = e.gamma / 10;
+          gravY = e.beta / 10;
         });
       }
     });
@@ -71,33 +86,30 @@ document.getElementById('sensor-btn').addEventListener('click', () => {
   document.getElementById('sensor-btn').style.display = 'none';
 });
 
-// 粒を大量生成（小さく、3000個）
-for(let i=0; i<3000; i++) {
-  particles.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: 0, vy: 0,
-    size: Math.random() * 0.8 + 0.3, // さらに小さく！
-    color: `hsl(${40 + Math.random()*20}, 90%, 60%)`
-  });
-}
-
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  particles.forEach(p => {
-    // 重力の影響
+  particles.forEach((p, i) => {
+    // 物理演算
     p.vx += gravX * 0.2;
     p.vy += gravY * 0.2;
+    p.vx *= 0.90; // 粘度
+    p.vy *= 0.90;
     
-    // 粘度（ここを上げるとドロっとする）
-    p.vx *= 0.85;
-    p.vy *= 0.85;
-    
+    // 簡易衝突判定（重なりすぎ防止：前の粒子との距離を保つ）
+    if (i > 0) {
+      let dx = p.x - particles[i-1].x;
+      let dy = p.y - particles[i-1].y;
+      if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
+        p.vx += dx * 0.1;
+        p.vy += dy * 0.1;
+      }
+    }
+
     p.x += p.vx;
     p.y += p.vy;
     
-    // 「画面の縁」で完全に止める（反射禁止）
+    // 壁での停止
     if(p.x < 0) { p.x = 0; p.vx = 0; }
     if(p.x > canvas.width) { p.x = canvas.width; p.vx = 0; }
     if(p.y < 0) { p.y = 0; p.vy = 0; }
