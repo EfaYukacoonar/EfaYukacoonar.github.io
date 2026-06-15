@@ -1,70 +1,48 @@
-/* ヘッダー全体の設定 */
-.glass-header {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  height: 60px;
-  background: rgba(0, 0, 0, 0.6); /* 半透明の黒 */
-  backdrop-filter: blur(12px);     /* 透き通るガラス効果 */
-  border-bottom: 1px solid #F20789; /* ネオンピンクのライン */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 30px;
-  z-index: 1000;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* なめらかな動き */
-  color: #fff;
-}
-
-/* スクロールで隠れるクラス */
-.header-hidden {
-  transform: translateY(-100%);
-}
-
-/* ハッカー風フォント指定 */
-.glass-header, .side-menu {
-  font-family: 'Courier New', monospace; /* お好みのハッカー系フォントへ */
-  letter-spacing: 1px;
-}
-
-/* ネオンの輝きを追加 */
-.site-title {
-  color: #F20CE3;
-  text-shadow: 0 0 8px #F20789;
-  font-weight: bold;
-  text-decoration: none;
-}
-let lastScrollY = window.scrollY;
-const header = document.getElementById('site-header');
-
-window.addEventListener('scroll', () => {
-  const currentScrollY = window.scrollY;
-
-  // 上にスクロールしたらヘッダー表示、下にスクロールしたら隠す
-  if (currentScrollY > lastScrollY && currentScrollY > 100) {
-    header.classList.add('header-hidden');
-  } else {
-    header.classList.remove('header-hidden');
+<style>
+  /* --- デザイン --- */
+  .glass-header {
+    position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);
+    border-bottom: 2px solid #F20789;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 30px; z-index: 1000; box-sizing: border-box;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #fff; font-family: 'Courier New', monospace;
   }
-  
-  lastScrollY = currentScrollY;
-});
+  .header-hidden { transform: translateY(-100%); }
+  .left-group { display: flex; align-items: center; gap: 20px; }
+  .site-title { color: #F20CE3; font-weight: bold; text-decoration: none; font-size: 20px; text-shadow: 0 0 8px #F20789; }
+  .nav-items { display: flex; gap: 20px; align-items: center; }
+  .nav-item { color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .icon-btn, .user-btn { background: none; border: none; cursor: pointer; color: #fff; }
+</style>
 
-// あとは既存のハンバーガーメニュー開閉処理などを続けて書いてね！
-let lastScrollY = window.scrollY;
-const header = document.getElementById('site-header');
+<header class="glass-header" id="site-header">
+  <div class="left-group">
+    <button id="menu-toggle" class="icon-btn">≡</button>
+    <a class="site-title" href="/">efayukacoonar</a>
+  </div>
 
-window.addEventListener('scroll', () => {
-  const currentScrollY = window.scrollY;
+  <nav class="nav-items">
+    <div class="search-bar">
+      <input type="text" placeholder="SEARCH..." style="background:rgba(255,255,255,0.1); border:1px solid #F20789; color:#fff; padding:5px; border-radius:4px;">
+    </div>
+    <a class="nav-item" href="#collections">Collection</a>
+    <a class="nav-item" href="#games">Games</a>
+    <button id="user-toggle" class="user-btn">👤</button>
+  </nav>
+</header>
 
-  // 上にスクロールしたらヘッダー表示、下にスクロールしたら隠す
-  if (currentScrollY > lastScrollY && currentScrollY > 100) {
-    header.classList.add('header-hidden');
-  } else {
-    header.classList.remove('header-hidden');
-  }
-  
-  lastScrollY = currentScrollY;
-});
+<script>
+  const header = document.getElementById('site-header');
+  let lastScrollY = window.scrollY;
 
-// あとは既存のハンバーガーメニュー開閉処理などを続けて書いてね！
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > lastScrollY && window.scrollY > 100) {
+      header.classList.add('header-hidden');
+    } else {
+      header.classList.remove('header-hidden');
+    }
+    lastScrollY = window.scrollY;
+  });
+</script>
