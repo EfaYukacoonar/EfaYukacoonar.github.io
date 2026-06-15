@@ -39,39 +39,62 @@ layout: none
 
 <div id="gold-canvas" style="position:fixed; top:0; left:0; z-index:-1; width:100%; height:100%;"></div>
 
+<canvas id="gold-glitter" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1;"></canvas>
+
 <script>
-  // ここに金色の粒子を泳がせるコードが入ります
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({alpha: true});
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.getElementById('gold-canvas').appendChild(renderer.domElement);
+const canvas = document.getElementById('gold-glitter');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let accX = 0, accY = 0; // 加速度（傾き）
 
-  // 金色の粒子を作成
-  const geometry = new THREE.BufferGeometry();
-  const particles = 2000;
-  const positions = new Float32Array(particles * 3);
-  for(let i=0; i<particles*3; i++) positions[i] = (Math.random() - 0.5) * 10;
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
 
-  const material = new THREE.PointsMaterial({color: 0xD4AF37, size: 0.05}); // 金色
-  const points = new THREE.Points(geometry, material);
-  scene.add(points);
+// 傾き取得（スマホ/iPad用）
+window.addEventListener('deviceorientation', (e) => {
+  accX = e.gamma / 20; // 左右の傾き
+  accY = e.beta / 20;  // 前後の傾き
+});
 
-  camera.position.z = 5;
-
-  // 傾きに反応して動かす
-  window.addEventListener('deviceorientation', (e) => {
-    points.rotation.x = e.beta * 0.01;
-    points.rotation.y = e.gamma * 0.01;
+// 金色のグリッター生成
+for(let i=0; i<400; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random()-0.5),
+    vy: (Math.random()-0.5),
+    size: Math.random() * 3 + 1,
+    color: `hsl(${40 + Math.random()*20}, 100%, ${50 + Math.random()*30}%)` // 金色のグラデーション
   });
+}
 
-  function animate() {
-    requestAnimationFrame(animate);
-    points.rotation.y += 0.002; // ゆっくり回転
-    renderer.render(scene, camera);
-  }
-  animate();
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.vx += accX * 0.05;
+    p.vy += accY * 0.05;
+    p.x += p.vx;
+    p.y += p.vy;
+    
+    // 壁で跳ね返りつつ減速
+    if(p.x < 0 || p.x > canvas.width) p.vx *= -0.5;
+    if(p.y < 0 || p.y > canvas.height) p.vy *= -0.5;
+    
+    // グリッター描画
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#FFD700'; // 金の光
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
 </script>
 </body>
 </html>
