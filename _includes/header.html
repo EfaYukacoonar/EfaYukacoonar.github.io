@@ -1,40 +1,36 @@
-<!-- HTML部分：ヘッダーの構造 -->
-<header class="cyber-header">
-  <div class="menu-btn">≡</div>
-  <div class="logo">efayukacoonar</div>
-  <div class="search-bar">
-    <input type="text" placeholder="Search data...">
-  </div>
-  <div class="home-btn">🏠</div>
-</header>
-/* CSS部分：見た目と動き */
-.cyber-header {
+/* ヘッダー全体の設定 */
+.glass-header {
   position: fixed;
   top: 0;
   width: 100%;
   height: 60px;
-  background: rgba(0, 0, 0, 0.7); /* 黒い半透明 */
-  backdrop-filter: blur(10px);    /* ガラスのようなぼかし */
-  border-bottom: 2px solid #F20789; /* ネオンピンクのライン */
+  background: rgba(0, 0, 0, 0.6); /* 半透明の黒 */
+  backdrop-filter: blur(12px);     /* 透き通るガラス効果 */
+  border-bottom: 1px solid #F20789; /* ネオンピンクのライン */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  transition: transform 0.5s ease; /* 吸い込まれるような動き */
+  padding: 0 30px;
+  z-index: 1000;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* なめらかな動き */
+  color: #fff;
 }
 
-/* スクロールで消える動き */
+/* スクロールで隠れるクラス */
 .header-hidden {
   transform: translateY(-100%);
 }
-let lastScrollY = window.scrollY;
-const header = document.querySelector('.cyber-header');
 
-window.addEventListener('scroll', () => {
-  if (window.scrollY > lastScrollY) {
-    header.classList.add('header-hidden'); // 下スクロールで隠す
-  } else {
-    header.classList.remove('header-hidden'); // 上スクロールで出す
-  }
-  lastScrollY = window.scrollY;
-});
+/* ハッカー風フォント指定 */
+.glass-header, .side-menu {
+  font-family: 'Courier New', monospace; /* お好みのハッカー系フォントへ */
+  letter-spacing: 1px;
+}
+
+/* ネオンの輝きを追加 */
+.site-title {
+  color: #F20CE3;
+  text-shadow: 0 0 8px #F20789;
+  font-weight: bold;
+  text-decoration: none;
+}
