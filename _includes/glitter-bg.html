@@ -6,11 +6,15 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1; /* コンテンツの裏に配置 */
-    pointer-events: auto; /* クリックを受け取る */
+    z-index: -1;
+    pointer-events: auto;
   }
 </style>
 <script type="importmap">
-  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
 </script>
 <script type="module" src="{{ '/assets/js/glitter-bg.js' | relative_url }}"></script>
