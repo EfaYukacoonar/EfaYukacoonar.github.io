@@ -34,3 +34,37 @@
   font-weight: bold;
   text-decoration: none;
 }
+let lastScrollY = window.scrollY;
+const header = document.getElementById('site-header');
+
+window.addEventListener('scroll', () => {
+  const currentScrollY = window.scrollY;
+
+  // 上にスクロールしたらヘッダー表示、下にスクロールしたら隠す
+  if (currentScrollY > lastScrollY && currentScrollY > 100) {
+    header.classList.add('header-hidden');
+  } else {
+    header.classList.remove('header-hidden');
+  }
+  
+  lastScrollY = currentScrollY;
+});
+
+// あとは既存のハンバーガーメニュー開閉処理などを続けて書いてね！
+let lastScrollY = window.scrollY;
+const header = document.getElementById('site-header');
+
+window.addEventListener('scroll', () => {
+  const currentScrollY = window.scrollY;
+
+  // 上にスクロールしたらヘッダー表示、下にスクロールしたら隠す
+  if (currentScrollY > lastScrollY && currentScrollY > 100) {
+    header.classList.add('header-hidden');
+  } else {
+    header.classList.remove('header-hidden');
+  }
+  
+  lastScrollY = currentScrollY;
+});
+
+// あとは既存のハンバーガーメニュー開閉処理などを続けて書いてね！
