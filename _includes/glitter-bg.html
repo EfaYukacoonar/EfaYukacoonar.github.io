@@ -15,27 +15,31 @@
 <script>
   (function() {
     const canvas = document.getElementById('glitter-canvas');
-    if (!canvas) return;
-
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
-
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.position.z = 5;
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    // グリッターの粒（細かくて小さいやつ）
+    const count = 500;
+    const geometry = new THREE.IcosahedronGeometry(0.05, 0); 
     const material = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    const mesh = new THREE.InstancedMesh(geometry, material, count);
+
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      dummy.position.set((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 5);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    }
+    scene.add(mesh);
 
     function animate() {
       requestAnimationFrame(animate);
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
+      mesh.rotation.z += 0.005; // ゆっくり回転
       renderer.render(scene, camera);
     }
     animate();
-    console.log("Three.js は正常に動いています！");
   })();
 </script>
