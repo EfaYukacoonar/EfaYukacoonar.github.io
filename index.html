@@ -39,15 +39,13 @@ layout: none
 
 <div id="gold-canvas" style="position:fixed; top:0; left:0; z-index:-1; width:100%; height:100%;"></div>
 
-<canvas id="liquid-acryl" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1;"></canvas>
-
-<button id="sensor-btn" style="position:fixed; top:80px; left:20px; z-index:9999; background:rgba(0,0,0,0.5); border:1px solid #F20789; color:#F20789; padding:10px; cursor:pointer; font-family:monospace;">INITIALIZE LIQUID</button>
+<canvas id="gold-glitter" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1;"></canvas>
 
 <script>
-const canvas = document.getElementById('liquid-acryl');
+const canvas = document.getElementById('gold-glitter');
 const ctx = canvas.getContext('2d');
 let particles = [];
-let accX = 0, accY = 0;
+let accX = 0, accY = 0; // 加速度（傾き）
 
 function resize() {
   canvas.width = window.innerWidth;
@@ -56,64 +54,45 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// センサー許可（Safari対応）
-document.getElementById('sensor-btn').addEventListener('click', () => {
-  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission().then(response => {
-      if (response == 'granted') {
-        window.addEventListener('deviceorientation', (e) => {
-          accX = e.gamma / 5;
-          accY = e.beta / 5;
-        });
-      }
-    });
-  }
-  document.getElementById('sensor-btn').style.display = 'none';
+// 傾き取得（スマホ/iPad用）
+window.addEventListener('deviceorientation', (e) => {
+  accX = e.gamma / 20; // 左右の傾き
+  accY = e.beta / 20;  // 前後の傾き
 });
 
-// 金色のグリッター生成（四角いカケラを混ぜることでアクリルっぽさUP）
-for(let i=0; i<1500; i++) {
+// 金色のグリッター生成
+for(let i=0; i<400; i++) {
   particles.push({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    vx: 0, vy: 0,
-    size: Math.random() * 1.8 + 0.5,
-    color: `hsl(${40 + Math.random()*20}, 90%, 60%)`,
-    isSquare: Math.random() > 0.7 // 30%の確率で四角いカケラに
+    vx: (Math.random()-0.5),
+    vy: (Math.random()-0.5),
+    size: Math.random() * 3 + 1,
+    color: `hsl(${40 + Math.random()*20}, 100%, ${50 + Math.random()*30}%)` // 金色のグラデーション
   });
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
   particles.forEach(p => {
-    // 物理演算（粘り気のある移動）
-    p.vx += accX * 0.03;
-    p.vy += accY * 0.03;
-    p.vx *= 0.92; // 摩擦係数：ここをいじると「ドロっと」感が変わる
-    p.vy *= 0.92;
+    p.vx += accX * 0.05;
+    p.vy += accY * 0.05;
     p.x += p.vx;
     p.y += p.vy;
     
-    // 画面内に留める
-    if(p.x < 0 || p.x > canvas.width) p.vx *= -0.3;
-    if(p.y < 0 || p.y > canvas.height) p.vy *= -0.3;
+    // 壁で跳ね返りつつ減速
+    if(p.x < 0 || p.x > canvas.width) p.vx *= -0.5;
+    if(p.y < 0 || p.y > canvas.height) p.vy *= -0.5;
     
-    // 描画
-    ctx.globalAlpha = 0.85;
+    // グリッター描画
     ctx.fillStyle = p.color;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#FFD700'; // 金の光
     ctx.beginPath();
-    if(p.isSquare) {
-      ctx.fillRect(p.x, p.y, p.size * 1.5, p.size * 1.5);
-    } else {
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-    }
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
     ctx.fill();
   });
-  
   requestAnimationFrame(draw);
 }
 draw();
 </script>
-</body>
-</html>
