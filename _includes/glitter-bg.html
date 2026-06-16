@@ -7,7 +7,7 @@
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    background: #000; /* 背景が黒だと金が映える */
+    background: #000;
   }
 </style>
 
@@ -22,32 +22,42 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.position.z = 5;
 
-    // 金色の粒をパーティクルとして作る
+    // 金粉（パーティクル）生成
     const count = 1000;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
-
-    for (let i = 0; i < count * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 20;
-    }
+    for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    // PointsMaterial で光る粒を作る（これが一番キラキラする）
-    const material = new THREE.PointsMaterial({
-      color: 0xffd700,
-      size: 0.1,
-      transparent: true,
-      opacity: 0.8,
-      sizeAttenuation: true
-    });
-
+    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.1 });
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
 
+    // ジャイロ用の変数
+    let tiltX = 0;
+    let tiltY = 0;
+
+    // 1. DeviceOrientationEventの実装（傾き）
+    window.addEventListener('deviceorientation', (event) => {
+      // event.beta: 前後傾き, event.gamma: 左右傾き
+      tiltX = event.gamma / 45; 
+      tiltY = event.beta / 45;
+    });
+
+    // 2. iOS対策：タップで許可を促す（これが無いと動かない）
+    window.addEventListener('click', () => {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(permissionState => {
+          if (permissionState === 'granted') console.log("許可されました！");
+        });
+      }
+    });
+
     function animate() {
       requestAnimationFrame(animate);
-      particles.rotation.y += 0.001;
-      particles.rotation.x += 0.0005;
+      // 傾きに応じてカメラを少し動かす
+      camera.position.x += (tiltX - camera.position.x) * 0.05;
+      camera.position.y += (-tiltY - camera.position.y) * 0.05;
+      camera.lookAt(scene.position);
       renderer.render(scene, camera);
     }
     animate();
