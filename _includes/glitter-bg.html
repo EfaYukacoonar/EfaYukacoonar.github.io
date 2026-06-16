@@ -24,7 +24,18 @@
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // リサイズ対応関数
+    function onResize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', onResize);
+    onResize();
+
     camera.position.z = 5;
 
     const count = 1000;
@@ -36,30 +47,27 @@
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
 
-    let tiltX = 0;
-    let tiltY = 0;
+    let tiltX = 0, tiltY = 0;
 
-    // ボタンを押した時の処理
     document.getElementById('gyro-btn').addEventListener('click', function() {
-      this.style.display = 'none'; // ボタンを隠す
-
-      // iOS13+ の許可リクエスト
+      this.style.display = 'none';
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-          .then(response => {
-            if (response === 'granted') {
-              window.addEventListener('deviceorientation', (e) => {
+        DeviceOrientationEvent.requestPermission().then(r => {
+          if (r === 'granted') {
+            window.addEventListener('deviceorientation', (e) => {
+              // window.orientation でデバイスの向きを取得
+              const o = window.orientation || 0;
+              if (o === 90 || o === -90) {
+                // 横向き時の補正
+                tiltX = e.beta / 45;
+                tiltY = -e.gamma / 45;
+              } else {
+                // 縦向き
                 tiltX = e.gamma / 45;
                 tiltY = e.beta / 45;
-              });
-            }
-          })
-          .catch(console.error);
-      } else {
-        // iOS以外の場合
-        window.addEventListener('deviceorientation', (e) => {
-          tiltX = e.gamma / 45;
-          tiltY = e.beta / 45;
+              }
+            });
+          }
         });
       }
     });
