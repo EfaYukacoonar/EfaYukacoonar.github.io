@@ -1,16 +1,9 @@
 <canvas id="glitter-canvas"></canvas>
-
-<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 10px 20px;">
-  キラキラを起動する
-</button>
-
 <style>
   #glitter-canvas {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
     z-index: -1;
     background: #000;
   }
@@ -19,65 +12,58 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
-  (function() {
-    const canvas = document.getElementById('glitter-canvas');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
-    
-    // リサイズ対応関数
-    function onResize() {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
+  const canvas = document.getElementById('glitter-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  // 2Dなのでカメラは固定（平行投影）
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+  // グリッターの素（今回はシンプルに点群）
+  const count = 800;
+  const geometry = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  const vel = new Float32Array(count * 3); // 速度データ
+
+  for (let i = 0; i < count * 3; i++) {
+    pos[i] = (Math.random() - 0.5) * 2;
+    vel[i] = 0;
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+
+  const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.02 });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  let gx = 0, gy = 0; // 重力ベクトル
+  window.addEventListener('deviceorientation', (e) => {
+    gx = e.gamma / 45;
+    gy = e.beta / 45;
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const positions = points.geometry.attributes.position.array;
+
+    for (let i = 0; i < count; i++) {
+      let ix = i * 3;
+      // 重力（傾き）を速度に加算
+      vel[ix] += gx * 0.001;
+      vel[ix+1] -= gy * 0.001;
+      // 粘性（少しずつ速度を落とす）
+      vel[ix] *= 0.98;
+      vel[ix+1] *= 0.98;
+      // 位置更新
+      positions[ix] += vel[ix];
+      positions[ix+1] += vel[ix+1];
+      
+      // 壁の跳ね返り
+      if (positions[ix] > 1 || positions[ix] < -1) vel[ix] *= -1;
+      if (positions[ix+1] > 1 || positions[ix+1] < -1) vel[ix+1] *= -1;
     }
-    window.addEventListener('resize', onResize);
-    onResize();
-
-    camera.position.z = 5;
-
-    const count = 1000;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.1 });
-    const particles = new THREE.Points(geometry, material);
-    scene.add(particles);
-
-    let tiltX = 0, tiltY = 0;
-
-    document.getElementById('gyro-btn').addEventListener('click', function() {
-      this.style.display = 'none';
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(r => {
-          if (r === 'granted') {
-            window.addEventListener('deviceorientation', (e) => {
-              // window.orientation でデバイスの向きを取得
-              const o = window.orientation || 0;
-              if (o === 90 || o === -90) {
-                // 横向き時の補正
-                tiltX = e.beta / 45;
-                tiltY = -e.gamma / 45;
-              } else {
-                // 縦向き
-                tiltX = e.gamma / 45;
-                tiltY = e.beta / 45;
-              }
-            });
-          }
-        });
-      }
-    });
-
-    function animate() {
-      requestAnimationFrame(animate);
-      particles.rotation.x += ((-tiltY * 0.5) - particles.rotation.x) * 0.05;
-      particles.rotation.y += ((tiltX * 0.5) - particles.rotation.y) * 0.05;
-      renderer.render(scene, camera);
-    }
-    animate();
-  })();
+    points.geometry.attributes.position.needsUpdate = true;
+    renderer.render(scene, camera);
+  }
+  animate();
 </script>
