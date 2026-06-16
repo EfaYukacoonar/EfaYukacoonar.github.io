@@ -25,12 +25,9 @@
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
     
-    // リサイズ対応関数
     function onResize() {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
     }
     window.addEventListener('resize', onResize);
@@ -47,7 +44,9 @@
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
 
-    let tiltX = 0, tiltY = 0;
+    // クォータニオンによる滑らかな回転
+    const targetQuaternion = new THREE.Quaternion();
+    const euler = new THREE.Euler(0, 0, 0, 'YXZ'); // 軸の重なりを防ぐ順序
 
     document.getElementById('gyro-btn').addEventListener('click', function() {
       this.style.display = 'none';
@@ -55,17 +54,13 @@
         DeviceOrientationEvent.requestPermission().then(r => {
           if (r === 'granted') {
             window.addEventListener('deviceorientation', (e) => {
-              // window.orientation でデバイスの向きを取得
-              const o = window.orientation || 0;
-              if (o === 90 || o === -90) {
-                // 横向き時の補正
-                tiltX = e.beta / 45;
-                tiltY = -e.gamma / 45;
-              } else {
-                // 縦向き
-                tiltX = e.gamma / 45;
-                tiltY = e.beta / 45;
-              }
+              // 度をラジアンに変換
+              const alpha = e.alpha ? THREE.MathUtils.degToRad(e.alpha) : 0;
+              const beta = e.beta ? THREE.MathUtils.degToRad(e.beta) : 0;
+              const gamma = e.gamma ? THREE.MathUtils.degToRad(e.gamma) : 0;
+              
+              euler.set(beta, alpha, -gamma);
+              targetQuaternion.setFromEuler(euler);
             });
           }
         });
@@ -74,8 +69,8 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      particles.rotation.x += ((-tiltY * 0.5) - particles.rotation.x) * 0.05;
-      particles.rotation.y += ((tiltX * 0.5) - particles.rotation.y) * 0.05;
+      // 今の回転から目標の回転へ滑らかに補間（Slerp）
+      particles.quaternion.slerp(targetQuaternion, 0.1);
       renderer.render(scene, camera);
     }
     animate();
