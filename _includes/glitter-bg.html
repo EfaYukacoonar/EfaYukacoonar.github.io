@@ -28,24 +28,23 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // 粒の数を50万個に！（これ以上はiPadの限界が近いよ！）
     const count = 500000; 
     const geometry = new THREE.BufferGeometry();
     const pos = new Float32Array(count * 3);
     const vel = new Float32Array(count * 2); 
-    const props = new Float32Array(count); // 質量と摩擦を混ぜて保存
+    const props = new Float32Array(count); // 質量兼、個別バラつき用
 
     for (let i = 0; i < count; i++) {
       pos[i*3] = (Math.random() - 0.5) * 2 * aspect;
-      pos[i*3+1] = (Math.random() - 0.5) * 2;
+      // 落ち始めをバラつかせるため、初期位置Yを広めに設定
+      pos[i*3+1] = (Math.random() - 0.5) * 2.5; 
       pos[i*3+2] = (Math.random() - 0.5) * 0.05;
-      // 質量と摩擦を個別に決定（これがバラつきの命）
-      props[i] = 0.8 + Math.random() * 0.4; 
+      // 質量を個別に決定（これが落ちるタイミングのバラつきになる）
+      props[i] = 0.5 + Math.random() * 1.5; 
     }
     geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     
-    // 粒を小さくして、数で攻める
-    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.005, transparent: true, opacity: 0.7 });
+    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.003, transparent: true, opacity: 0.8 });
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
@@ -60,8 +59,9 @@
     window.addEventListener('deviceorientation', (e) => {
       if(!isEnabled) return;
       const o = window.orientation || 0;
-      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 400;
-      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 400;
+      // 感度を調整（600にすることで過敏さを抑える）
+      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 600;
+      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 600;
     });
 
     function animate() {
@@ -73,20 +73,29 @@
         let v_ix = i * 2;
 
         if(isEnabled) {
-          vel[v_ix] += gx * props[i];
-          vel[v_ix+1] -= gy * props[i];
+          // 重力に質量の差を反映させて落下タイミングをバラけさせる
+          vel[v_ix] += gx * props[i] * 0.005;
+          vel[v_ix+1] -= gy * props[i] * 0.005;
         }
-        vel[v_ix] *= 0.96; // 粘性
+        
+        // 粘性（0.96でねっとり感を出す）
+        vel[v_ix] *= 0.96;
         vel[v_ix+1] *= 0.96;
         
         p[ix] += vel[v_ix];
         p[ix+1] += vel[v_ix+1];
         
-        // 境界＆重なり防止のランダム跳ね返り
+        // 境界＆溜まった時に一直線にならないようランダムな揺らぎを入れる
         if(p[ix] > aspect) { p[ix] = aspect; vel[v_ix] *= -0.2 * Math.random(); }
         else if(p[ix] < -aspect) { p[ix] = -aspect; vel[v_ix] *= -0.2 * Math.random(); }
+        
         if(p[ix+1] > 1) { p[ix+1] = 1; vel[v_ix+1] *= -0.2 * Math.random(); }
-        else if(p[ix+1] < -1) { p[ix+1] = -1; vel[v_ix+1] *= -0.2 * Math.random(); }
+        else if(p[ix+1] < -1) { 
+          p[ix+1] = -1; 
+          vel[v_ix+1] *= -0.2 * Math.random();
+          // 底に着いたら横に少し散らすことで一直線を防ぐ
+          p[ix] += (Math.random() - 0.5) * 0.005;
+        }
       }
       points.geometry.attributes.position.needsUpdate = true;
       renderer.render(scene, camera);
