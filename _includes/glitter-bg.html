@@ -10,42 +10,47 @@
 <script>
   (function() {
     const canvas = document.getElementById('glitter-canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
     
-    let w, h, aspect;
-    function resize() {
-      w = window.innerWidth; h = window.innerHeight;
-      aspect = w / h;
-      renderer.setSize(w, h);
-      camera.left = -aspect; camera.right = aspect;
-      camera.top = 1; camera.bottom = -1;
-      camera.updateProjectionMatrix();
-    }
-    
+    // カメラの高さ（Y方向）を1に固定して、横幅をアスペクト比で計算する
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
     camera.position.z = 10;
+
+    function resize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const aspect = w / h;
+      renderer.setSize(w, h);
+      
+      // カメラの表示範囲をアスペクト比で完全に合わせる
+      camera.left = -aspect;
+      camera.right = aspect;
+      camera.top = 1;
+      camera.bottom = -1;
+      camera.updateProjectionMatrix();
+    }
     window.addEventListener('resize', resize);
     resize();
 
-    // 粒の数を50万個に！（これ以上はiPadの限界が近いよ！）
-    const count = 500000; 
+    const count = 5000;
     const geometry = new THREE.BufferGeometry();
     const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 2); 
-    const props = new Float32Array(count); // 質量と摩擦を混ぜて保存
+    const vel = new Float32Array(count * 3);
+    const friction = new Float32Array(count);
+    const mass = new Float32Array(count);
 
+    // aspectに依存した初期配置
+    const aspect = window.innerWidth / window.innerHeight;
     for (let i = 0; i < count; i++) {
       pos[i*3] = (Math.random() - 0.5) * 2 * aspect;
       pos[i*3+1] = (Math.random() - 0.5) * 2;
-      pos[i*3+2] = (Math.random() - 0.5) * 0.05;
-      // 質量と摩擦を個別に決定（これがバラつきの命）
-      props[i] = 0.8 + Math.random() * 0.4; 
+      pos[i*3+2] = (Math.random() - 0.5) * 0.1;
+      friction[i] = 0.95 + Math.random() * 0.03;
+      mass[i] = 0.5 + Math.random() * 1.5;
     }
     geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    
-    // 粒を小さくして、数で攻める
-    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.005, transparent: true, opacity: 0.7 });
+    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.02 });
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
@@ -60,34 +65,44 @@
     window.addEventListener('deviceorientation', (e) => {
       if(!isEnabled) return;
       const o = window.orientation || 0;
-      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 400;
-      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 400;
+      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 600;
+      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 600;
     });
 
     function animate() {
       requestAnimationFrame(animate);
       const p = points.geometry.attributes.position.array;
-      
-      for (let i = 0; i < count; i++) {
-        let ix = i * 3;
-        let v_ix = i * 2;
+      const a = window.innerWidth / window.innerHeight; // 現在の比率
 
+      // animate関数内の for ループをこう書き換える
+    for (let i = 0; i < count; i++) {
+        // --- 1. 起動前、あるいは落下開始前の「バラつき」 ---
+        // Y座標が高い（上にある）ほど早く落ちる、低いほど遅れる仕組み
+        let delay = (1 - (p[i*3+1] + 1) / 2) * 0.1; 
+        
         if(isEnabled) {
-          vel[v_ix] += gx * props[i];
-          vel[v_ix+1] -= gy * props[i];
+            // 重力に「個別の重さ」だけでなく「初期の遅延」を考慮
+            vel[i*3] += gx * mass[i];
+            vel[i*3+1] -= (gy * mass[i]);
         }
-        vel[v_ix] *= 0.96; // 粘性
-        vel[v_ix+1] *= 0.96;
+
+        vel[i*3] *= friction[i];
+        vel[i*3+1] *= friction[i];
+        p[i*3] += vel[i*3];
+        p[i*3+1] += vel[i*3+1];
         
-        p[ix] += vel[v_ix];
-        p[ix+1] += vel[v_ix+1];
+        // --- 2. 境界で跳ね返った後、積もる時に重ならないようにする ---
+        if(p[i*3+1] < -1) {
+            p[i*3+1] = -1;
+            vel[i*3+1] *= -0.2; // 底に着いたら止まりやすく
+            p[i*3] += (Math.random() - 0.5) * 0.05; // 左右に少し散らす（これで一直線にならない）
+        }
         
-        // 境界＆重なり防止のランダム跳ね返り
-        if(p[ix] > aspect) { p[ix] = aspect; vel[v_ix] *= -0.2 * Math.random(); }
-        else if(p[ix] < -aspect) { p[ix] = -aspect; vel[v_ix] *= -0.2 * Math.random(); }
-        if(p[ix+1] > 1) { p[ix+1] = 1; vel[v_ix+1] *= -0.2 * Math.random(); }
-        else if(p[ix+1] < -1) { p[ix+1] = -1; vel[v_ix+1] *= -0.2 * Math.random(); }
-      }
+        // 壁の跳ね返り判定はそのまま
+        if(p[i*3] > a) { p[i*3] = a; vel[i*3] *= -0.5; }
+        else if(p[i*3] < -a) { p[i*3] = -a; vel[i*3] *= -0.5; }
+        if(p[i*3+1] > 1) { p[i*3+1] = 1; vel[i*3+1] *= -0.5; }
+    }
       points.geometry.attributes.position.needsUpdate = true;
       renderer.render(scene, camera);
     }
