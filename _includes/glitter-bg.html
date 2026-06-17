@@ -1,77 +1,112 @@
 <canvas id="glitter-canvas"></canvas>
-<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 15px 30px;">起動</button>
+<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 15px 30px; background: rgba(0,0,0,0.5); color: #ffd700; border: 1px solid #ffd700; cursor: pointer; font-size: 16px;">液体を起動</button>
+
+<style>
+  body { margin: 0; background: #000; overflow: hidden; }
+  #glitter-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; }
+</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script id="vertexShader" type="x-shader/x-vertex">
   uniform vec2 uGravity;
-  attribute float life;
+  attribute float mass; // 個別の質量
   varying float vLife;
+  
   void main() {
     vec3 pos = position;
-    pos.xy += uGravity * 10.0; // 重力反映
-    // 壁での反射（簡易的だけどGPUでやるから爆速）
-    if (abs(pos.x) > 1.0) pos.x = sign(pos.x) * 1.0;
-    if (abs(pos.y) > 1.0) pos.y = sign(pos.y) * 1.0;
+    // 重力の影響を個別の質量で計算
+    pos.xy += uGravity * mass * 5.0;
+    
+    // 底に溜まった時の揺らぎ（一直線を防ぐ）
+    if (pos.y < -0.95) {
+      pos.x += sin(pos.x * 500.0) * 0.002;
+      pos.y = -0.95;
+    }
+    
+    // 壁の反射（画面端で跳ね返る）
+    if (abs(pos.x) > 0.98) pos.x = sign(pos.x) * 0.98;
+    if (abs(pos.y) > 0.98) pos.y = sign(pos.y) * 0.98;
+    
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = 1.5;
+    gl_PointSize = 1.2;
   }
 </script>
 
 <script id="fragmentShader" type="x-shader/x-fragment">
-  void main() { gl_FragColor = vec4(1.0, 0.84, 0.0, 0.8); }
+  void main() {
+    gl_FragColor = vec4(1.0, 0.85, 0.5, 0.9);
+  }
 </script>
 
 <script>
-  const canvas = document.getElementById('glitter-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-  const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
-  
-  const count = 500000;
-  const positions = new Float32Array(count * 3);
-  for(let i=0; i<count*3; i++) positions[i] = (Math.random()-0.5)*2.0;
-  
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  
-  const material = new THREE.ShaderMaterial({
-    uniforms: { uGravity: { value: new THREE.Vector2(0, 0) } },
-    vertexShader: document.getElementById('vertexShader').textContent,
-    fragmentShader: document.getElementById('fragmentShader').textContent
-  });
-  
-  const points = new THREE.Points(geometry, material);
-  scene.add(points);
-
-  // ローパスフィルタの変数
-  let gx = 0, gy = 0, filteredGx = 0, filteredGy = 0;
-  const alpha = 0.02; // ここを小さくするとヌルヌル感が強まる
-
-  window.addEventListener('deviceorientation', (e) => {
-    gx = (e.gamma || 0) / 400;
-    gy = (e.beta || 0) / 400;
-  });
-
-  function resize() {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  function animate() {
-    // フィルタ適用（ここで重厚な動きを作る）
-    filteredGx += (gx - filteredGx) * alpha;
-    filteredGy += (gy - filteredGy) * alpha;
+  (function() {
+    const canvas = document.getElementById('glitter-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
+    renderer.setClearColor(0x000000, 1);
     
-    material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-  
-  document.getElementById('gyro-btn').addEventListener('click', (e) => {
-    e.target.style.display = 'none';
-    if (DeviceOrientationEvent.requestPermission) DeviceOrientationEvent.requestPermission();
-    animate();
-  });
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
+    
+    const count = 500000;
+    const positions = new Float32Array(count * 3);
+    const masses = new Float32Array(count); // 重さの配列
+    
+    for(let i = 0; i < count; i++) {
+      positions[i*3] = (Math.random() - 0.5) * 1.8;
+      positions[i*3+1] = (Math.random() - 0.5) * 1.8;
+      positions[i*3+2] = 0;
+      masses[i] = 0.5 + Math.random() * 1.5; // 重さを個別に設定
+    }
+    
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('mass', new THREE.BufferAttribute(masses, 1));
+    
+    const material = new THREE.ShaderMaterial({
+      uniforms: { uGravity: { value: new THREE.Vector2(0, 0) } },
+      vertexShader: document.getElementById('vertexShader').textContent,
+      fragmentShader: document.getElementById('fragmentShader').textContent,
+      transparent: true,
+      blending: THREE.AdditiveBlending
+    });
+    
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    // ローパスフィルタ変数
+    let gx = 0, gy = 0, filteredGx = 0, filteredGy = 0;
+    const alpha = 0.02; // ヌルヌル感の係数
+
+    window.addEventListener('deviceorientation', (e) => {
+      gx = (e.gamma || 0) / 400;
+      gy = (e.beta || 0) / 400;
+    });
+
+    function resize() {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function animate() {
+      // フィルタ適用（ここで重厚な動きを作る）
+      filteredGx += (gx - filteredGx) * alpha;
+      filteredGy += (gy - filteredGy) * alpha;
+      
+      material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
+      
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    
+    document.getElementById('gyro-btn').addEventListener('click', (e) => {
+      e.target.style.display = 'none';
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(r => { if(r === 'granted') animate(); });
+      } else {
+        animate();
+      }
+    });
+  })();
 </script>
