@@ -10,47 +10,42 @@
 <script>
   (function() {
     const canvas = document.getElementById('glitter-canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, powerPreference: "high-performance" });
     
-    // カメラの高さ（Y方向）を1に固定して、横幅をアスペクト比で計算する
+    let w, h, aspect;
+    function resize() {
+      w = window.innerWidth; h = window.innerHeight;
+      aspect = w / h;
+      renderer.setSize(w, h);
+      camera.left = -aspect; camera.right = aspect;
+      camera.top = 1; camera.bottom = -1;
+      camera.updateProjectionMatrix();
+    }
+    
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
     camera.position.z = 10;
-
-    function resize() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const aspect = w / h;
-      renderer.setSize(w, h);
-      
-      // カメラの表示範囲をアスペクト比で完全に合わせる
-      camera.left = -aspect;
-      camera.right = aspect;
-      camera.top = 1;
-      camera.bottom = -1;
-      camera.updateProjectionMatrix();
-    }
     window.addEventListener('resize', resize);
     resize();
 
-    const count = 5000;
+    // 粒の数を50万個に！（これ以上はiPadの限界が近いよ！）
+    const count = 500000; 
     const geometry = new THREE.BufferGeometry();
     const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
-    const friction = new Float32Array(count);
-    const mass = new Float32Array(count);
+    const vel = new Float32Array(count * 2); 
+    const props = new Float32Array(count); // 質量と摩擦を混ぜて保存
 
-    // aspectに依存した初期配置
-    const aspect = window.innerWidth / window.innerHeight;
     for (let i = 0; i < count; i++) {
       pos[i*3] = (Math.random() - 0.5) * 2 * aspect;
       pos[i*3+1] = (Math.random() - 0.5) * 2;
-      pos[i*3+2] = (Math.random() - 0.5) * 0.1;
-      friction[i] = 0.95 + Math.random() * 0.03;
-      mass[i] = 0.5 + Math.random() * 1.5;
+      pos[i*3+2] = (Math.random() - 0.5) * 0.05;
+      // 質量と摩擦を個別に決定（これがバラつきの命）
+      props[i] = 0.8 + Math.random() * 0.4; 
     }
     geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.02 });
+    
+    // 粒を小さくして、数で攻める
+    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.005, transparent: true, opacity: 0.7 });
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
@@ -65,30 +60,33 @@
     window.addEventListener('deviceorientation', (e) => {
       if(!isEnabled) return;
       const o = window.orientation || 0;
-      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 600;
-      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 600;
+      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 400;
+      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 400;
     });
 
     function animate() {
       requestAnimationFrame(animate);
       const p = points.geometry.attributes.position.array;
-      const a = window.innerWidth / window.innerHeight; // 現在の比率
-
+      
       for (let i = 0; i < count; i++) {
+        let ix = i * 3;
+        let v_ix = i * 2;
+
         if(isEnabled) {
-          vel[i*3] += gx * 0.005 * mass[i];
-          vel[i*3+1] -= gy * 0.005 * mass[i];
+          vel[v_ix] += gx * props[i];
+          vel[v_ix+1] -= gy * props[i];
         }
-        vel[i*3] *= friction[i];
-        vel[i*3+1] *= friction[i];
-        p[i*3] += vel[i*3];
-        p[i*3+1] += vel[i*3+1];
+        vel[v_ix] *= 0.96; // 粘性
+        vel[v_ix+1] *= 0.96;
         
-        // 画面のフチ（アスペクト比aを考慮した境界）で跳ね返る
-        if(p[i*3] > a) { p[i*3] = a; vel[i*3] *= -0.5; }
-        else if(p[i*3] < -a) { p[i*3] = -a; vel[i*3] *= -0.5; }
-        if(p[i*3+1] > 1) { p[i*3+1] = 1; vel[i*3+1] *= -0.5; }
-        else if(p[i*3+1] < -1) { p[i*3+1] = -1; vel[i*3+1] *= -0.5; }
+        p[ix] += vel[v_ix];
+        p[ix+1] += vel[v_ix+1];
+        
+        // 境界＆重なり防止のランダム跳ね返り
+        if(p[ix] > aspect) { p[ix] = aspect; vel[v_ix] *= -0.2 * Math.random(); }
+        else if(p[ix] < -aspect) { p[ix] = -aspect; vel[v_ix] *= -0.2 * Math.random(); }
+        if(p[ix+1] > 1) { p[ix+1] = 1; vel[v_ix+1] *= -0.2 * Math.random(); }
+        else if(p[ix+1] < -1) { p[ix+1] = -1; vel[v_ix+1] *= -0.2 * Math.random(); }
       }
       points.geometry.attributes.position.needsUpdate = true;
       renderer.render(scene, camera);
