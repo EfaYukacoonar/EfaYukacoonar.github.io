@@ -46,7 +46,7 @@
       pos[i*3] = (Math.random() - 0.5) * 2 * aspect;
       pos[i*3+1] = (Math.random() - 0.5) * 2;
       pos[i*3+2] = (Math.random() - 0.5) * 0.1;
-      friction[i] = 0.92 + Math.random() * 0.05;
+      friction[i] = 0.95 + Math.random() * 0.03;
       mass[i] = 0.5 + Math.random() * 1.5;
     }
     geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -65,8 +65,8 @@
     window.addEventListener('deviceorientation', (e) => {
       if(!isEnabled) return;
       const o = window.orientation || 0;
-      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 200;
-      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 200;
+      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 600;
+      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 600;
     });
 
     function animate() {
@@ -76,8 +76,8 @@
 
       for (let i = 0; i < count; i++) {
         if(isEnabled) {
-          vel[i*3] += gx * mass[i];
-          vel[i*3+1] -= gy * mass[i];
+          vel[i*3] += gx * 0.005 * mass[i];
+          vel[i*3+1] -= gy * 0.005 * mass[i];
         }
         vel[i*3] *= friction[i];
         vel[i*3+1] *= friction[i];
