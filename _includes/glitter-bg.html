@@ -14,21 +14,19 @@
   
   void main() {
     vec3 pos = position;
-    // 逆さまにした時に先端から崩れるよう、現在の位置(pos.y)が山の上なら重力を強くする
-    float fallFactor = smoothstep(-0.8, 0.0, pos.y); 
-    pos.xy += uGravity * mass * 5.0 * (1.0 + fallFactor);
     
-    // 山形に積もらせる処理
-    if (pos.y < -0.95) {
-      // x座標に応じて y を高くする（山形にする）
-      float distFromCenter = abs(pos.x);
-      float mountainHeight = (1.0 - distFromCenter) * 0.2;
-      pos.y = -0.95 + mountainHeight;
-      // 溜まった場所で少し横に散らして一直線を防ぐ
-      pos.x += sin(pos.x * 500.0) * 0.001;
+    // 1. 傾き（uGravity）の大きさに応じてスピードを加速させる
+    float speed = length(uGravity) * 50.0 + 1.0; 
+    pos.xy += uGravity * mass * speed * 0.1;
+    
+    // 2. 堆積ロジック：現在の重力の向きに少しだけ引き寄せる
+    // 重力方向に向かって「堆積」をシミュレート
+    if (dot(pos.xy, normalize(uGravity + 0.0001)) > 0.8) {
+        // ここにいる粒は壁（今の傾き方向）に吸い寄せられる
+        pos.xy += normalize(uGravity) * 0.005;
     }
     
-    // 壁の反射（画面端）
+    // 壁の反射
     if (abs(pos.x) > 0.98) pos.x = sign(pos.x) * 0.98;
     if (abs(pos.y) > 0.98) pos.y = sign(pos.y) * 0.98;
     
@@ -39,7 +37,9 @@
 
 <script id="fragmentShader" type="x-shader/x-fragment">
   void main() {
-    gl_FragColor = vec4(1.0, 0.4, 0.2, 0.9);
+    float dist = length(gl_PointCoord - vec2(0.5));
+    if (dist > 0.5) discard;
+    gl_FragColor = vec4(0.8, 0.35, 0.15, 0.6);
   }
 </script>
 
@@ -98,7 +98,7 @@
       filteredGx += (gx - filteredGx) * alpha;
       filteredGy += (gy - filteredGy) * alpha;
       
-      material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
+      material.uniforms.uGravity.value.set(filteredGx * 2.0, -filteredGy * 2.0);
       
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
