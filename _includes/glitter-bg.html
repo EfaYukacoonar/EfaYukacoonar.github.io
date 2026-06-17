@@ -12,24 +12,24 @@
     const canvas = document.getElementById('glitter-canvas');
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
     
-    // 画面の縦横比を考慮した可動域の管理
-    let width, height, aspect;
+    // カメラの高さ（Y方向）を1に固定して、横幅をアスペクト比で計算する
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
+    camera.position.z = 10;
+
     function resize() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      aspect = width / height;
-      renderer.setSize(width, height);
-      // カメラの表示範囲を画面のピクセルサイズに合わせる
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const aspect = w / h;
+      renderer.setSize(w, h);
+      
+      // カメラの表示範囲をアスペクト比で完全に合わせる
       camera.left = -aspect;
       camera.right = aspect;
       camera.top = 1;
       camera.bottom = -1;
       camera.updateProjectionMatrix();
     }
-    
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0, 100);
-    camera.position.z = 10;
     window.addEventListener('resize', resize);
     resize();
 
@@ -40,10 +40,12 @@
     const friction = new Float32Array(count);
     const mass = new Float32Array(count);
 
+    // aspectに依存した初期配置
+    const aspect = window.innerWidth / window.innerHeight;
     for (let i = 0; i < count; i++) {
-      pos[i*3] = (Math.random() - 0.5) * 2 * aspect; // 縦横比に合わせて配置
+      pos[i*3] = (Math.random() - 0.5) * 2 * aspect;
       pos[i*3+1] = (Math.random() - 0.5) * 2;
-      pos[i*3+2] = (Math.random() - 0.5) * 0.1; // 超薄型（奥行き）
+      pos[i*3+2] = (Math.random() - 0.5) * 0.1;
       friction[i] = 0.92 + Math.random() * 0.05;
       mass[i] = 0.5 + Math.random() * 1.5;
     }
@@ -70,6 +72,8 @@
     function animate() {
       requestAnimationFrame(animate);
       const p = points.geometry.attributes.position.array;
+      const a = window.innerWidth / window.innerHeight; // 現在の比率
+
       for (let i = 0; i < count; i++) {
         if(isEnabled) {
           vel[i*3] += gx * mass[i];
@@ -80,9 +84,11 @@
         p[i*3] += vel[i*3];
         p[i*3+1] += vel[i*3+1];
         
-        // 境界を画面のaspectに合わせる
-        if(p[i*3] > aspect || p[i*3] < -aspect) { vel[i*3] *= -0.5; p[i*3] = Math.max(-aspect, Math.min(aspect, p[i*3])); }
-        if(p[i*3+1] > 1 || p[i*3+1] < -1) { vel[i*3+1] *= -0.5; p[i*3+1] = Math.max(-1, Math.min(1, p[i*3+1])); }
+        // 画面のフチ（アスペクト比aを考慮した境界）で跳ね返る
+        if(p[i*3] > a) { p[i*3] = a; vel[i*3] *= -0.5; }
+        else if(p[i*3] < -a) { p[i*3] = -a; vel[i*3] *= -0.5; }
+        if(p[i*3+1] > 1) { p[i*3+1] = 1; vel[i*3+1] *= -0.5; }
+        else if(p[i*3+1] < -1) { p[i*3+1] = -1; vel[i*3+1] *= -0.5; }
       }
       points.geometry.attributes.position.needsUpdate = true;
       renderer.render(scene, camera);
