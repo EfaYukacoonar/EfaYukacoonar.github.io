@@ -10,21 +10,25 @@
 
 <script id="vertexShader" type="x-shader/x-vertex">
   uniform vec2 uGravity;
-  attribute float mass; // 個別の質量
-  varying float vLife;
+  attribute float mass;
   
   void main() {
     vec3 pos = position;
-    // 重力の影響を個別の質量で計算
-    pos.xy += uGravity * mass * 5.0;
+    // 逆さまにした時に先端から崩れるよう、現在の位置(pos.y)が山の上なら重力を強くする
+    float fallFactor = smoothstep(-0.8, 0.0, pos.y); 
+    pos.xy += uGravity * mass * 5.0 * (1.0 + fallFactor);
     
-    // 底に溜まった時の揺らぎ（一直線を防ぐ）
+    // 山形に積もらせる処理
     if (pos.y < -0.95) {
-      pos.x += sin(pos.x * 500.0) * 0.002;
-      pos.y = -0.95;
+      // x座標に応じて y を高くする（山形にする）
+      float distFromCenter = abs(pos.x);
+      float mountainHeight = (1.0 - distFromCenter) * 0.2;
+      pos.y = -0.95 + mountainHeight;
+      // 溜まった場所で少し横に散らして一直線を防ぐ
+      pos.x += sin(pos.x * 500.0) * 0.001;
     }
     
-    // 壁の反射（画面端で跳ね返る）
+    // 壁の反射（画面端）
     if (abs(pos.x) > 0.98) pos.x = sign(pos.x) * 0.98;
     if (abs(pos.y) > 0.98) pos.y = sign(pos.y) * 0.98;
     
