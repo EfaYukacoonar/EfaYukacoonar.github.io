@@ -1,98 +1,77 @@
 <canvas id="glitter-canvas"></canvas>
-<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 10px 20px;">キラキラを起動</button>
-
-<style>
-  #glitter-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: #000; }
-</style>
+<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 15px 30px;">起動</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
+<script id="vertexShader" type="x-shader/x-vertex">
+  uniform vec2 uGravity;
+  attribute float life;
+  varying float vLife;
+  void main() {
+    vec3 pos = position;
+    pos.xy += uGravity * 10.0; // 重力反映
+    // 壁での反射（簡易的だけどGPUでやるから爆速）
+    if (abs(pos.x) > 1.0) pos.x = sign(pos.x) * 1.0;
+    if (abs(pos.y) > 1.0) pos.y = sign(pos.y) * 1.0;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    gl_PointSize = 1.5;
+  }
+</script>
+
+<script id="fragmentShader" type="x-shader/x-fragment">
+  void main() { gl_FragColor = vec4(1.0, 0.84, 0.0, 0.8); }
+</script>
+
 <script>
-  (function() {
-    const canvas = document.getElementById('glitter-canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  const canvas = document.getElementById('glitter-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
+  
+  const count = 500000;
+  const positions = new Float32Array(count * 3);
+  for(let i=0; i<count*3; i++) positions[i] = (Math.random()-0.5)*2.0;
+  
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uGravity: { value: new THREE.Vector2(0, 0) } },
+    vertexShader: document.getElementById('vertexShader').textContent,
+    fragmentShader: document.getElementById('fragmentShader').textContent
+  });
+  
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  // ローパスフィルタの変数
+  let gx = 0, gy = 0, filteredGx = 0, filteredGy = 0;
+  const alpha = 0.02; // ここを小さくするとヌルヌル感が強まる
+
+  window.addEventListener('deviceorientation', (e) => {
+    gx = (e.gamma || 0) / 400;
+    gy = (e.beta || 0) / 400;
+  });
+
+  function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function animate() {
+    // フィルタ適用（ここで重厚な動きを作る）
+    filteredGx += (gx - filteredGx) * alpha;
+    filteredGy += (gy - filteredGy) * alpha;
     
-    // カメラの高さ（Y方向）を1に固定して、横幅をアスペクト比で計算する
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
-    camera.position.z = 10;
-
-    function resize() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const aspect = w / h;
-      renderer.setSize(w, h);
-      
-      // カメラの表示範囲をアスペクト比で完全に合わせる
-      camera.left = -aspect;
-      camera.right = aspect;
-      camera.top = 1;
-      camera.bottom = -1;
-      camera.updateProjectionMatrix();
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    const count = 50000;
-    const geometry = new THREE.BufferGeometry();
-    const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
-    const friction = new Float32Array(count);
-    const mass = new Float32Array(count);
-
-    // aspectに依存した初期配置
-    const aspect = window.innerWidth / window.innerHeight;
-    for (let i = 0; i < count; i++) {
-      pos[i*3] = (Math.random() - 0.5) * 2 * aspect;
-      pos[i*3+1] = (Math.random() - 0.5) * 2;
-      pos[i*3+2] = (Math.random() - 0.5) * 0.1;
-      friction[i] = 0.95 + Math.random() * 0.03;
-      mass[i] = 0.5 + Math.random() * 1.5;
-    }
-    geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.02 });
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
-
-    let gx = 0, gy = 0, isEnabled = false;
-    document.getElementById('gyro-btn').addEventListener('click', () => {
-      document.getElementById('gyro-btn').style.display = 'none';
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(r => { if(r === 'granted') isEnabled = true; });
-      } else { isEnabled = true; }
-    });
-
-    window.addEventListener('deviceorientation', (e) => {
-      if(!isEnabled) return;
-      const o = window.orientation || 0;
-      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 600;
-      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 600;
-    });
-
-    function animate() {
-      requestAnimationFrame(animate);
-      const p = points.geometry.attributes.position.array;
-      const a = window.innerWidth / window.innerHeight; // 現在の比率
-
-      for (let i = 0; i < count; i++) {
-        if(isEnabled) {
-          vel[i*3] += gx * 0.005 * mass[i];
-          vel[i*3+1] -= gy * 0.005 * mass[i];
-        }
-        vel[i*3] *= friction[i];
-        vel[i*3+1] *= friction[i];
-        p[i*3] += vel[i*3];
-        p[i*3+1] += vel[i*3+1];
-        
-        // 画面のフチ（アスペクト比aを考慮した境界）で跳ね返る
-        if(p[i*3] > a) { p[i*3] = a; vel[i*3] *= -0.5; }
-        else if(p[i*3] < -a) { p[i*3] = -a; vel[i*3] *= -0.5; }
-        if(p[i*3+1] > 1) { p[i*3+1] = 1; vel[i*3+1] *= -0.5; }
-        else if(p[i*3+1] < -1) { p[i*3+1] = -1; vel[i*3+1] *= -0.5; }
-      }
-      points.geometry.attributes.position.needsUpdate = true;
-      renderer.render(scene, camera);
-    }
+    material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  
+  document.getElementById('gyro-btn').addEventListener('click', (e) => {
+    e.target.style.display = 'none';
+    if (DeviceOrientationEvent.requestPermission) DeviceOrientationEvent.requestPermission();
     animate();
-  })();
+  });
 </script>
