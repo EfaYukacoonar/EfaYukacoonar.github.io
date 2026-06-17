@@ -1,16 +1,8 @@
 <canvas id="glitter-canvas"></canvas>
-
-<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-  キラキラを起動する
-</button>
+<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 10px 20px;">キラキラを起動</button>
 
 <style>
-  #glitter-canvas {
-    position: fixed; top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    z-index: -1;
-    background: #000;
-  }
+  #glitter-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: #000; }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -19,73 +11,70 @@
   (function() {
     const canvas = document.getElementById('glitter-canvas');
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // アスペクト比を維持してサイズ管理
+    function resize() {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 20; // 空間を少し広くして「厚み」を感じさせる
+    // 画面サイズに合わせて常に箱のサイズを計算
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 10;
 
-    const count = 1000;
+    const count = 1200;
     const geometry = new THREE.BufferGeometry();
     const pos = new Float32Array(count * 3);
     const vel = new Float32Array(count * 3);
+    const friction = new Float32Array(count); // 個別の粘性抵抗
+    const mass = new Float32Array(count); // 個別の質量
 
-    // グリッターの初期位置（立方体の中に配置）
-    for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 10;
+    for (let i = 0; i < count; i++) {
+      pos[i*3] = (Math.random() - 0.5) * 8;
+      pos[i*3+1] = (Math.random() - 0.5) * 8;
+      pos[i*3+2] = (Math.random() - 0.5) * 0.5; // ここが奥行き1cm(0.5単位)
+      friction[i] = 0.92 + Math.random() * 0.05; // 粒によって動きの鈍さが違う
+      mass[i] = 0.5 + Math.random() * 1.5; // 重さの違い
+    }
     geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     const material = new THREE.PointsMaterial({ color: 0xffd700, size: 0.15 });
-    const particles = new THREE.Points(geometry, material);
-    scene.add(particles);
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
 
-    let isEnabled = false; // ジャイロ起動フラグ
-    let gx = 0, gy = 0;
-
-    document.getElementById('gyro-btn').addEventListener('click', function() {
-      this.style.display = 'none';
+    let gx = 0, gy = 0, isEnabled = false;
+    document.getElementById('gyro-btn').addEventListener('click', () => {
+      document.getElementById('gyro-btn').style.display = 'none';
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(r => {
-          if (r === 'granted') isEnabled = true;
-        });
-      } else {
-        isEnabled = true;
-      }
+        DeviceOrientationEvent.requestPermission().then(r => { if(r === 'granted') isEnabled = true; });
+      } else { isEnabled = true; }
     });
 
     window.addEventListener('deviceorientation', (e) => {
-      if (!isEnabled) return;
-      // 水平を基準に傾きを反映
+      if(!isEnabled) return;
       const o = window.orientation || 0;
-      if (o === 90 || o === -90) {
-        gx = e.beta / 20;
-        gy = -e.gamma / 20;
-      } else {
-        gx = e.gamma / 20;
-        gy = e.beta / 20;
-      }
+      gx = (o === 90 || o === -90 ? e.beta : e.gamma) / 30;
+      gy = (o === 90 || o === -90 ? -e.gamma : e.beta) / 30;
     });
 
     function animate() {
       requestAnimationFrame(animate);
-      const p = particles.geometry.attributes.position.array;
-
+      const p = points.geometry.attributes.position.array;
       for (let i = 0; i < count; i++) {
-        let ix = i * 3;
-        // 起動前は gx, gy が 0 なので動かない（水平）
-        if (isEnabled) {
-          vel[ix] += gx * 0.05;
-          vel[ix + 1] -= gy * 0.05;
+        if(isEnabled) {
+          vel[i*3] += gx * 0.01 * mass[i];
+          vel[i*3+1] -= gy * 0.01 * mass[i];
         }
-        vel[ix] *= 0.95; // 粘性
-        vel[ix + 1] *= 0.95;
-        
-        p[ix] += vel[ix];
-        p[ix + 1] += vel[ix + 1];
-
-        // 厚みを感じさせる壁の跳ね返り判定
-        if (p[ix] > 5 || p[ix] < -5) { vel[ix] *= -0.5; p[ix] = Math.max(-5, Math.min(5, p[ix])); }
-        if (p[ix + 1] > 5 || p[ix + 1] < -5) { vel[ix + 1] *= -0.5; p[ix + 1] = Math.max(-5, Math.min(5, p[ix + 1])); }
+        vel[i*3] *= friction[i];
+        vel[i*3+1] *= friction[i];
+        p[i*3] += vel[i*3];
+        p[i*3+1] += vel[i*3+1];
+        // 境界判定（レスポンシブ対応のため相対値）
+        if(p[i*3] > 4 || p[i*3] < -4) vel[i*3] *= -0.3;
+        if(p[i*3+1] > 4 || p[i*3+1] < -4) vel[i*3+1] *= -0.3;
       }
-      particles.geometry.attributes.position.needsUpdate = true;
+      points.geometry.attributes.position.needsUpdate = true;
       renderer.render(scene, camera);
     }
     animate();
