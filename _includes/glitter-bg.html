@@ -81,10 +81,16 @@
     let gx = 0, gy = 0, filteredGx = 0, filteredGy = 0;
     const alpha = 0.02; // ヌルヌル感の係数
 
-    window.addEventListener('deviceorientation', (e) => {
-      gx = (e.gamma || 0) / 400;
-      gy = (e.beta || 0) / 400;
-    });
+window.addEventListener('deviceorientation', (e) => {
+  let gx = (e.gamma || 0) / 400;
+  let gy = (e.beta || 0) / 400;
+
+  if (Math.abs(gx) < 0.005) gx = 0;
+  if (Math.abs(gy) < 0.005) gy = 0;
+
+  window.currentGx = gx;
+  window.currentGy = gy;
+});
 
     function resize() {
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -92,16 +98,15 @@
     window.addEventListener('resize', resize);
     resize();
 
-    function animate() {
-      // フィルタ適用（ここで重厚な動きを作る）
-      filteredGx += (gx - filteredGx) * alpha;
-      filteredGy += (gy - filteredGy) * alpha;
-      
-      material.uniforms.uGravity.value.set(filteredGx * 2.0, -filteredGy * 2.0);
-      
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
+function animate() {
+  filteredGx += ((window.currentGx || 0) - filteredGx) * alpha;
+  filteredGy += ((window.currentGy || 0) - filteredGy) * alpha;
+  
+  material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
+  
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
     
     document.getElementById('gyro-btn').addEventListener('click', (e) => {
       e.target.style.display = 'none';
