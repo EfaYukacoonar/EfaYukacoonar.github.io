@@ -11,24 +11,23 @@
 <script id="vertexShader" type="x-shader/x-vertex">
   uniform vec2 uGravity;
   attribute float mass;
-  
+  varying float vLife;
+
   void main() {
     vec3 pos = position;
+  
+    bool isStacked = (pos.y < -0.94 && abs(uGravity.y) < 0.001);
     
-    // 1. 傾き（uGravity）の大きさに応じてスピードを加速させる
-    float speed = length(uGravity) * 50.0 + 1.0; 
-    pos.xy += uGravity * mass * speed * 0.1;
-    
-    // 2. 堆積ロジック：現在の重力の向きに少しだけ引き寄せる
-    // 重力方向に向かって「堆積」をシミュレート
-    if (dot(pos.xy, normalize(uGravity + 0.0001)) > 0.8) {
-        // ここにいる粒は壁（今の傾き方向）に吸い寄せられる
-        pos.xy += normalize(uGravity) * 0.005;
+    if (!isStacked) {
+      pos.xy += uGravity * mass * 10.0;
     }
     
-    // 壁の反射
-    if (abs(pos.x) > 0.98) pos.x = sign(pos.x) * 0.98;
-    if (abs(pos.y) > 0.98) pos.y = sign(pos.y) * 0.98;
+    if (pos.y < -0.94) {
+      pos.y = -0.94;
+      pos.x += sin(pos.y * 1000.0) * 0.002;
+    }
+
+    pos.x = clamp(pos.x, -0.98, 0.98);
     
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
     gl_PointSize = 1.2;
