@@ -82,8 +82,24 @@
     const alpha = 0.02; // ヌルヌル感の係数
 
 window.addEventListener('deviceorientation', (e) => {
-  let gx = (e.gamma || 0) / 400;
-  let gy = (e.beta || 0) / 400;
+  let gx = 0, gy = 0;
+  
+  // iPadの回転角（window.orientation）を取得
+  const o = window.orientation || 0; 
+  
+  if (o === 0) {
+    gx = e.gamma / 400;
+    gy = e.beta / 400;
+  } else if (o === 90) {
+    gx = e.beta / 400;
+    gy = -e.gamma / 400;
+  } else if (o === -90) {
+    gx = -e.beta / 400;
+    gy = e.gamma / 400;
+  } else if (o === 180) {
+    gx = -e.gamma / 400;
+    gy = -e.beta / 400;
+  }
 
   if (Math.abs(gx) < 0.005) gx = 0;
   if (Math.abs(gy) < 0.005) gy = 0;
@@ -92,11 +108,16 @@ window.addEventListener('deviceorientation', (e) => {
   window.currentGy = gy;
 });
 
-    function resize() {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener('resize', resize);
-    resize();
+function resize() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  renderer.setSize(w, h);
+  const aspect = w / h;
+  camera.left = -aspect;
+  camera.right = aspect;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('orientationchange', resize);
 
 function animate() {
   filteredGx += ((window.currentGx || 0) - filteredGx) * alpha;
