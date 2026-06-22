@@ -10,35 +10,36 @@
 
 <script id="vertexShader" type="x-shader/x-vertex">
   uniform vec2 uGravity;
+  uniform float uAspect;
   attribute float mass;
-  varying float vLife;
+  varying float vDensity; // 重なり具合をフラグメントに伝える
 
   void main() {
     vec3 pos = position;
-  
-    bool isStacked = (pos.y < -0.94 && abs(uGravity.y) < 0.001);
     
-    if (!isStacked) {
-      pos.xy += uGravity * mass * 10.0;
-    }
+    pos.xy += uGravity * mass * 15.0;
     
-    if (pos.y < -0.94) {
+    if (pos.y <= -0.94) {
       pos.y = -0.94;
-      pos.x += sin(pos.y * 1000.0) * 0.002;
+      pos.x += uGravity.x * 0.05; // 傾けたら層が移動する
     }
-
-    pos.x = clamp(pos.x, -0.98, 0.98);
+    
+    pos.x = clamp(pos.x, -uAspect + 0.02, uAspect - 0.02);
+    pos.y = clamp(pos.y, -0.94, 0.94);
+    
+    vDensity = 1.0 - (pos.y + 0.94); 
     
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = 1.2;
+    gl_PointSize = 1.5;
   }
 </script>
 
 <script id="fragmentShader" type="x-shader/x-fragment">
+  varying float vDensity;
   void main() {
-    float dist = length(gl_PointCoord - vec2(0.5));
-    if (dist > 0.5) discard;
-    gl_FragColor = vec4(0.8, 0.35, 0.15, 0.6);
+    if (length(gl_PointCoord - vec2(0.5)) > 0.5) discard;
+    float brightness = 1.0 / (vDensity * 2.0 + 0.5);
+    gl_FragColor = vec4(0.8 * brightness, 0.35 * brightness, 0.15 * brightness, 0.8);
   }
 </script>
 
