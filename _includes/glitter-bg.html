@@ -44,98 +44,116 @@
 
 <script>
   (function() {
-    const canvas = document.getElementById('glitter-canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
-    renderer.setClearColor(0x000000, 1);
+  const canvas = document.getElementById('glitter-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
+  
+  // ピクセル比をiPadのRetinaディスプレイに合わせて強制設定
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setClearColor(0x000000, 1);
+  
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
+  camera.position.z = 10;
+  scene.add(camera);
+  
+  const count = 500000;
+  const positions = new Float32Array(count * 3);
+  const masses = new Float32Array(count);
+  
+  for(let i = 0; i < count; i++) {
+    positions[i*3] = (Math.random() - 0.5) * 1.8;
+    positions[i*3+1] = (Math.random() - 0.5) * 1.8;
+    positions[i*3+2] = 0;
+    masses[i] = 0.5 + Math.random() * 1.5;
+  }
+  
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('mass', new THREE.BufferAttribute(masses, 1));
+  
+  const material = new THREE.ShaderMaterial({
+    uniforms: { 
+      uGravity: { value: new THREE.Vector2(0, 0) },
+      uAspect: { value: window.innerWidth / window.innerHeight }
+    },
+    vertexShader: document.getElementById('vertexShader').textContent,
+    fragmentShader: document.getElementById('fragmentShader').textContent,
+    transparent: true,
+    blending: THREE.AdditiveBlending
+  });
+  
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  function resize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    renderer.setSize(w, h);
     
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
-    
-    const count = 500000;
-    const positions = new Float32Array(count * 3);
-    const masses = new Float32Array(count); // 重さの配列
-    
-    for(let i = 0; i < count; i++) {
-      positions[i*3] = (Math.random() - 0.5) * 1.8;
-      positions[i*3+1] = (Math.random() - 0.5) * 1.8;
-      positions[i*3+2] = 0;
-      masses[i] = 0.5 + Math.random() * 1.5; // 重さを個別に設定
+    const aspect = w / h;
+    camera.left = -aspect;
+    camera.right = aspect;
+    camera.top = 1;
+    camera.bottom = -1;
+    camera.updateProjectionMatrix();
+
+    if (material) {
+      material.uniforms.uAspect.value = aspect;
     }
-    
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('mass', new THREE.BufferAttribute(masses, 1));
-    
-    const material = new THREE.ShaderMaterial({
-      uniforms: { uGravity: { value: new THREE.Vector2(0, 0) } },
-      vertexShader: document.getElementById('vertexShader').textContent,
-      fragmentShader: document.getElementById('fragmentShader').textContent,
-      transparent: true,
-      blending: THREE.AdditiveBlending
-    });
-    
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
-
-    // ローパスフィルタ変数
-    let gx = 0, gy = 0, filteredGx = 0, filteredGy = 0;
-    const alpha = 0.02; // ヌルヌル感の係数
-
-window.addEventListener('deviceorientation', (e) => {
-  let gx = 0, gy = 0;
-  
-  // iPadの回転角（window.orientation）を取得
-  const o = window.orientation || 0; 
-  
-  if (o === 0) {
-    gx = e.gamma / 400;
-    gy = e.beta / 400;
-  } else if (o === 90) {
-    gx = e.beta / 400;
-    gy = -e.gamma / 400;
-  } else if (o === -90) {
-    gx = -e.beta / 400;
-    gy = e.gamma / 400;
-  } else if (o === 180) {
-    gx = -e.gamma / 400;
-    gy = -e.beta / 400;
   }
 
-  if (Math.abs(gx) < 0.005) gx = 0;
-  if (Math.abs(gy) < 0.005) gy = 0;
-
-  window.currentGx = gx;
-  window.currentGy = gy;
-});
-
-function resize() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  renderer.setSize(w, h);
-  const aspect = w / h;
-  camera.left = -aspect;
-  camera.right = aspect;
-  camera.updateProjectionMatrix();
-}
-window.addEventListener('orientationchange', resize);
-
-function animate() {
-  filteredGx += ((window.currentGx || 0) - filteredGx) * alpha;
-  filteredGy += ((window.currentGy || 0) - filteredGy) * alpha;
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', resize);
   
-  material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
-  
+  // 起動直後の描画を強制
+  resize();
   renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
+
+  let gx = 0, gy = 0, filteredGx = 0, filteredGy = 0;
+  const alpha = 0.02;
+
+  window.addEventListener('deviceorientation', (e) => {
+    let gx = 0, gy = 0;
+    const o = window.orientation || 0; 
     
-    document.getElementById('gyro-btn').addEventListener('click', (e) => {
-      e.target.style.display = 'none';
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(r => { if(r === 'granted') animate(); });
-      } else {
-        animate();
-      }
-    });
-  })();
+    if (o === 0) {
+      gx = e.gamma / 400;
+      gy = e.beta / 400;
+    } else if (o === 90) {
+      gx = e.beta / 400;
+      gy = -e.gamma / 400;
+    } else if (o === -90) {
+      gx = -e.beta / 400;
+      gy = e.gamma / 400;
+    } else if (o === 180) {
+      gx = -e.gamma / 400;
+      gy = -e.beta / 400;
+    }
+
+    if (Math.abs(gx) < 0.005) gx = 0;
+    if (Math.abs(gy) < 0.005) gy = 0;
+
+    window.currentGx = gx;
+    window.currentGy = gy;
+  });
+
+  function animate() {
+    filteredGx += ((window.currentGx || 0) - filteredGx) * alpha;
+    filteredGy += ((window.currentGy || 0) - filteredGy) * alpha;
+    
+    material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
+    
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+    
+  document.getElementById('gyro-btn').addEventListener('click', (e) => {
+    e.target.style.display = 'none';
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(r => { if(r === 'granted') animate(); });
+    } else {
+      animate();
+    }
+  });
+})();
 </script>
