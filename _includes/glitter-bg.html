@@ -1,37 +1,56 @@
-<canvas id="glitter-canvas"></canvas>
-<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 15px 30px; background: rgba(0,0,0,0.5); color: #ffd700; border: 1px solid #ffd700; cursor: pointer; font-size: 16px;">液体を起動</button>
+<canvas id="glitter-canvas" style="opacity: 0; transition: opacity 1s;"></canvas>
 
-<style>
-  body { margin: 0; background: #000; overflow: hidden; }
-  #glitter-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; }
-</style>
+<div id="overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center;">
+  <div style="text-align: center; color: #ffd700; font-family: sans-serif;">
+    <p>ジャイロでグリッターを起動しますか？</p>
+    <button id="yes-btn" style="padding: 15px 30px; font-size: 20px; background: #ffd700; border: none; cursor: pointer;">YES</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script id="vertexShader" type="x-shader/x-vertex">
   uniform vec2 uGravity;
   attribute float mass;
-  varying float vLife;
-
+  
   void main() {
     vec3 pos = position;
-  
-    bool isStacked = (pos.y < -0.94 && abs(uGravity.y) < 0.001);
     
-    if (!isStacked) {
-      pos.xy += uGravity * mass * 10.0;
-    }
+    // 雪のように常に下に降る力を追加
+    vec2 snowForce = vec2(0.0, -0.01); 
     
+    // 傾きと雪の力を合成
+    pos.xy += (uGravity * mass * 5.0) + (snowForce * mass);
+    
+    // 底に到達したら静止（積もる）
     if (pos.y < -0.94) {
       pos.y = -0.94;
-      pos.x += sin(pos.y * 1000.0) * 0.002;
+      pos.x += sin(pos.x * 500.0) * 0.002;
     }
-
-    pos.x = clamp(pos.x, -0.98, 0.98);
     
+    // 画面外に飛んだら上から再生成（雪のループ）
+    if (pos.y < -1.0) pos.y = 1.0;
+    
+    pos.x = clamp(pos.x, -0.98, 0.98);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
     gl_PointSize = 1.2;
   }
+</script>
+
+<script>
+  const canvas = document.getElementById('glitter-canvas');
+  const overlay = document.getElementById('overlay');
+  
+  document.getElementById('yes-btn').addEventListener('click', () => {
+    overlay.style.display = 'none'; // ポップアップ消去
+    canvas.style.opacity = '1';    // キャンバス表示
+    
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(r => { if(r === 'granted') animate(); });
+    } else {
+      animate();
+    }
+  });
 </script>
 
 <script id="fragmentShader" type="x-shader/x-fragment">
