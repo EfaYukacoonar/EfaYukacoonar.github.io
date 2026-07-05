@@ -1,0 +1,25 @@
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  border-bottom: 1px solid #d4af37; /* 金色の境界線 */
+}
+
+/* スクロールで隠すクラス */
+.header-hidden {
+  transform: translateY(-100%);
+}
+
+.logo {
+  font-family: 'Imperial Script', cursive;
+  color: #d4af37;
+  text-shadow: 0 0 10px #d4af37; /* 金色の輝き */
+}
+
+/* PC用：フル表示 */
+@media (min-width: 768px) { .logo-short { display: none; } }
+/* スマホ用：Efaのみ */
+@media (max-width: 767px) { .logo-full { display: none; } }
