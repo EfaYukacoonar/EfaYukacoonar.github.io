@@ -1,43 +1,57 @@
+<!-- フォントの読み込み -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Imperial+Script&display=swap" rel="stylesheet">
+
 <style>
-  /* --- デザイン --- */
-  .glass-header {
-    position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-    background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px);
-    border-bottom: 2px solid #F20789;
+  :root { --gold: #D4AF37; --glass-black: rgba(0, 0, 0, 0.75); }
+  
+  .imperial-header {
+    position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+    background: var(--glass-black); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--gold);
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 30px; z-index: 1000; box-sizing: border-box;
+    padding: 0 30px; box-sizing: border-box; z-index: 1000;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #fff; font-family: 'Courier New', monospace;
+    color: var(--gold); font-family: 'Cormorant Garamond', serif;
   }
   .header-hidden { transform: translateY(-100%); }
-  .left-group { display: flex; align-items: center; gap: 20px; }
-  .site-title { color: #F20CE3; font-weight: bold; text-decoration: none; font-size: 20px; text-shadow: 0 0 8px #F20789; }
-  .nav-items { display: flex; gap: 20px; align-items: center; }
-  .nav-item { color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
-  .icon-btn, .user-btn { background: none; border: none; cursor: pointer; color: #fff; }
+  
+  /* ロゴの設定 */
+  .site-logo { font-family: 'Imperial Script', cursive; font-size: 32px; text-decoration: none; color: var(--gold); cursor: pointer; }
+  
+  /* 検索バーの可変設定 */
+  .search-container { position: relative; display: flex; align-items: center; }
+  .search-input { 
+    width: 0; opacity: 0; transition: width 0.4s, opacity 0.4s;
+    background: transparent; border: none; border-bottom: 1px solid var(--gold); color: var(--gold); outline: none;
+  }
+  .search-container:hover .search-input, .search-container:focus-within .search-input { width: 150px; opacity: 1; padding: 0 5px; }
+  
+  .nav-group { display: flex; align-items: center; gap: 20px; font-size: 18px; }
+  .icon { cursor: pointer; }
 </style>
 
-<header class="glass-header" id="site-header">
-  <div class="left-group">
-    <button id="menu-toggle" class="icon-btn">≡</button>
-    <a class="site-title" href="/">efayukacoonar</a>
+<header class="imperial-header" id="main-header">
+  <div class="nav-group">
+    <span class="icon" onclick="toggleMenu()">≡</span>
   </div>
+  
+  <a href="https://efayukacoonar.github.io/" class="site-logo">Efa</a>
 
-  <nav class="nav-items">
-    <div class="search-bar">
-      <input type="text" placeholder="SEARCH..." style="background:rgba(255,255,255,0.1); border:1px solid #F20789; color:#fff; padding:5px; border-radius:4px;">
+  <div class="nav-group">
+    <div class="search-container">
+      <span class="icon">🔍</span>
+      <input type="text" class="search-input" placeholder="Search...">
     </div>
-    <a class="nav-item" href="#collections">Collection</a>
-    <a class="nav-item" href="#games">Games</a>
-    <button id="user-toggle" class="user-btn">👤</button>
-  </nav>
+    <span class="icon">👤</span>
+  </div>
 </header>
 
 <script>
-  const header = document.getElementById('site-header');
   let lastScrollY = window.scrollY;
+  const header = document.getElementById('main-header');
 
   window.addEventListener('scroll', () => {
+    // 下にスクロールで隠し、上にスクロールで表示
     if (window.scrollY > lastScrollY && window.scrollY > 100) {
       header.classList.add('header-hidden');
     } else {
