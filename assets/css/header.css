@@ -1,25 +1,32 @@
-header {
-  position: fixed;
-  top: 0;
-  width: 100%;
+#main-header {
   background: rgba(0, 0, 0, 0.75);
-  transition: transform 0.3s ease;
-  z-index: 1000;
-  border-bottom: 1px solid #d4af37; /* 金色の境界線 */
-}
-
-/* スクロールで隠すクラス */
-.header-hidden {
-  transform: translateY(-100%);
+  border-bottom: 2px solid #b8860b; /* 金色 */
+  backdrop-filter: blur(5px);
+  position: fixed;
+  width: 100%;
+  transition: transform 0.4s ease;
 }
 
 .logo {
   font-family: 'Imperial Script', cursive;
-  color: #d4af37;
-  text-shadow: 0 0 10px #d4af37; /* 金色の輝き */
+  font-size: 2rem;
+  color: #ffd700; /* ゴールド */
+  text-shadow: 0 0 15px rgba(218, 165, 32, 0.8);
+  text-decoration: none;
 }
 
-/* PC用：フル表示 */
-@media (min-width: 768px) { .logo-short { display: none; } }
-/* スマホ用：Efaのみ */
-@media (max-width: 767px) { .logo-full { display: none; } }
+/* 検索バーの広がるアニメーション */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+}
+#search-input {
+  width: 0;
+  transition: width 0.4s ease;
+  background: transparent;
+  border: 1px solid #b8860b;
+  color: white;
+}
+.search-wrapper.active #search-input {
+  width: 200px;
+}
