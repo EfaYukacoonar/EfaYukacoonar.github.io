@@ -1,23 +1,27 @@
-// スクロール制御
-let lastScroll = 0;
-const header = document.getElementById('main-header');
+document.addEventListener('DOMContentLoaded', () => {
+  const header = document.getElementById('site-header');
+  const searchBox = document.querySelector('.search-box');
+  const searchInput = document.getElementById('search-input');
+  
+  // スクロールで隠れる
+  let lastScroll = 0;
+  window.addEventListener('scroll', () => {
+    let current = window.pageYOffset;
+    header.style.transform = current > lastScroll ? 'translateY(-100%)' : 'translateY(0)';
+    lastScroll = current;
+  });
 
-window.addEventListener('scroll', () => {
-  let currentScroll = window.pageYOffset;
-  header.style.transform = currentScroll > lastScroll ? "translateY(-100%)" : "translateY(0)";
-  lastScroll = currentScroll;
-});
+  // 検索バー制御
+  document.querySelector('.search-trigger').addEventListener('click', (e) => {
+    searchBox.classList.add('open');
+    searchInput.focus();
+    e.stopPropagation();
+  });
 
-// 検索バーの挙動
-const searchWrapper = document.querySelector('.search-wrapper');
-const searchInput = document.getElementById('search-input');
-
-document.addEventListener('click', (e) => {
-  // 検索バーの内側をクリックした時は開く
-  if (searchWrapper.contains(e.target)) {
-    searchWrapper.classList.add('active');
-  } else {
-    // 検索バーの外側をクリックしたら閉じる
-    searchWrapper.classList.remove('active');
-  }
+  // 外側タップで閉じる
+  document.addEventListener('click', (e) => {
+    if (!searchBox.contains(e.target)) {
+      searchBox.classList.remove('open');
+    }
+  });
 });
