@@ -1,21 +1,23 @@
-// スクロール検知
+// スクロール制御
 let lastScroll = 0;
+const header = document.getElementById('main-header');
+
 window.addEventListener('scroll', () => {
-  const currentScroll = window.pageYOffset;
-  const header = document.querySelector('header');
-  if (currentScroll > lastScroll) {
-    header.classList.add('header-hidden');
-  } else {
-    header.classList.remove('header-hidden');
-  }
+  let currentScroll = window.pageYOffset;
+  header.style.transform = currentScroll > lastScroll ? "translateY(-100%)" : "translateY(0)";
   lastScroll = currentScroll;
 });
 
-// 検索バーの「外側クリックで閉じる」処理
+// 検索バーの挙動
+const searchWrapper = document.querySelector('.search-wrapper');
+const searchInput = document.getElementById('search-input');
+
 document.addEventListener('click', (e) => {
-  const searchBar = document.querySelector('.search-container');
-  if (!searchBar.contains(e.target)) {
-    // ここで閉じる処理（input値はDOMに残るため自動で維持されます）
-    searchBar.classList.remove('is-open');
+  // 検索バーの内側をクリックした時は開く
+  if (searchWrapper.contains(e.target)) {
+    searchWrapper.classList.add('active');
+  } else {
+    // 検索バーの外側をクリックしたら閉じる
+    searchWrapper.classList.remove('active');
   }
 });
