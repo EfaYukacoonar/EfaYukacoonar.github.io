@@ -1,32 +1,22 @@
-#main-header {
+#site-header {
+  position: fixed; top: 0; width: 100%; height: 60px;
   background: rgba(0, 0, 0, 0.75);
-  border-bottom: 2px solid #b8860b; /* 金色 */
-  backdrop-filter: blur(5px);
-  position: fixed;
-  width: 100%;
-  transition: transform 0.4s ease;
+  border-bottom: 2px solid #c5a059; /* アンティークゴールド */
+  transition: transform 0.3s ease; z-index: 9999;
 }
-
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 100%; color: #e6c270;
+}
 .logo {
-  font-family: 'Imperial Script', cursive;
-  font-size: 2rem;
-  color: #ffd700; /* ゴールド */
-  text-shadow: 0 0 15px rgba(218, 165, 32, 0.8);
-  text-decoration: none;
+  font-family: 'Imperial Script', cursive; font-size: 2.2rem;
+  color: #d4af37; text-decoration: none; text-shadow: 0 0 8px #8b6e22;
 }
+@media (max-width: 600px) { .logo-full { display: none; } }
+@media (min-width: 601px) { .logo-short { display: none; } }
 
-/* 検索バーの広がるアニメーション */
-.search-wrapper {
-  display: flex;
-  align-items: center;
-}
 #search-input {
-  width: 0;
-  transition: width 0.4s ease;
-  background: transparent;
-  border: 1px solid #b8860b;
-  color: white;
+  background: transparent; border: 1px solid #c5a059; color: #fff;
+  width: 0; opacity: 0; transition: all 0.4s ease;
 }
-.search-wrapper.active #search-input {
-  width: 200px;
-}
+.search-box.open #search-input { width: 180px; opacity: 1; padding: 5px; }
