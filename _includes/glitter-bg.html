@@ -1,163 +1,331 @@
-<canvas id="glitter-canvas"></canvas>
-<button id="gyro-btn" style="position: fixed; top: 20px; left: 20px; z-index: 10; padding: 15px 30px; background: rgba(0,0,0,0.5); color: #ffd700; border: 1px solid #ffd700; cursor: pointer; font-size: 16px;">液体を起動</button>
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Liquid Gold Glitter Background</title>
 <style>
-  body { margin: 0; background: #000; overflow: hidden; }
-  #glitter-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+  #glitter-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    display: block;
+  }
+  #gyro-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    padding: 15px 30px;
+    background: rgba(0,0,0,0.55);
+    color: #ffd700;
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    letter-spacing: 0.05em;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #gyro-btn:active { background: rgba(255,215,0,0.15); }
+
+  /* ここから下は動作確認用のサンプルテキスト。本番では自分のサイトの内容に差し替えてOK */
+  .demo-content {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    font-family: sans-serif;
+    text-align: center;
+    padding-top: 45vh;
+  }
 </style>
+</head>
+<body>
+
+<canvas id="glitter-canvas"></canvas>
+<button id="gyro-btn">✨ 液体を起動</button>
+
+<div class="demo-content">
+  <h1 style="color:#ffd700;">Your Content Here</h1>
+  <p>この上にサイトの文字や要素を置けます</p>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<script id="vertexShader" type="x-shader/x-vertex">
-  uniform vec2 uGravity;
-  uniform float uAspect;
-  attribute float mass;
-  varying float vIsLayer;
-
-  void main() {
-    vec3 pos = position;
-    
-    pos.xy += uGravity * mass * 15.0;
-    
-    if (pos.y < -0.8) {
-      pos.y = -0.8; 
-      vIsLayer = 1.0;
-    } else {
-      vIsLayer = 0.0;
-    }
-    
-    pos.x = clamp(pos.x, -uAspect + 0.02, uAspect - 0.02);
-    
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = 1.5;
-  }
-</script>
-
-<script id="fragmentShader" type="x-shader/x-fragment">
-  varying float vIsLayer;
-  void main() {
-    if (length(gl_PointCoord - vec2(0.5)) > 0.5) discard;
-    
-    if (vIsLayer > 0.5) {
-      gl_FragColor = vec4(0.5, 0.2, 0.1, 0.8);
-    } else {
-      gl_FragColor = vec4(0.8, 0.4, 0.2, 0.6);
-    }
-  }
-</script>
-
 <script>
-  (function() {
+(function () {
+  'use strict';
+
+  // ==============================
+  // 調整用パラメータ（ここをいじれば質感が変わります）
+  // ==============================
+  const CONFIG = {
+    count: 3500,          // 粒子数（多いほど密度は上がるが重くなる）
+    gravityStrength: 4.2,  // 傾けたときの加速度の強さ
+    damping: 0.955,        // 粘性（1に近いほどサラサラ、低いほどドロっと重い液体感）
+    restitution: 0.25,     // 壁にぶつかった時の跳ね返り具合
+    jitter: 0.0009,        // 常時の微振動（液体に浮遊してる感じ）
+    minSize: 1.4,          // 粒子の最小サイズ(px)
+    maxSize: 4.2,          // 粒子の最大サイズ(px)
+    wallMargin: 0.02        // 画面端の余白（ここでせき止められる）
+  };
+
   const canvas = document.getElementById('glitter-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
-  
-  // ピクセル比をiPadのRetinaディスプレイに合わせて強制設定
-  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  const btn = document.getElementById('gyro-btn');
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setClearColor(0x000000, 1);
-  
+
   const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 100);
-  camera.position.z = 10;
-  scene.add(camera);
-  
-  const count = 500000;
-  const positions = new Float32Array(count * 3);
-  const masses = new Float32Array(count);
-  
-  for(let i = 0; i < count; i++) {
-    positions[i*3] = (Math.random() - 0.5) * 1.8;
-    positions[i*3+1] = (Math.random() - 0.5) * 1.8;
-    positions[i*3+2] = 0;
-    masses[i] = 0.5 + Math.random() * 1.5;
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+  camera.position.z = 5;
+
+  // ==============================
+  // 粒子データ (CPU側で物理演算 → position を毎フレーム書き換える)
+  // ==============================
+  const COUNT = CONFIG.count;
+  const positions = new Float32Array(COUNT * 3);
+  const velocities = new Float32Array(COUNT * 2); // x, y のみ（z は常に0）
+  const sizes = new Float32Array(COUNT);
+  const phases = new Float32Array(COUNT);
+  const seeds = new Float32Array(COUNT);
+  const masses = new Float32Array(COUNT);
+
+  let aspect = window.innerWidth / window.innerHeight;
+  let boundX = aspect - CONFIG.wallMargin;
+  let boundY = 1 - CONFIG.wallMargin;
+
+  for (let i = 0; i < COUNT; i++) {
+    positions[i * 3]     = (Math.random() * 2 - 1) * boundX;
+    positions[i * 3 + 1] = (Math.random() * 2 - 1) * boundY;
+    positions[i * 3 + 2] = 0;
+    velocities[i * 2] = 0;
+    velocities[i * 2 + 1] = 0;
+    const size = CONFIG.minSize + Math.random() * (CONFIG.maxSize - CONFIG.minSize);
+    sizes[i] = size;
+    // 大きい粒ほど重い（沈みやすい）、小さい粒ほど浮遊しやすい
+    masses[i] = 0.4 + (size - CONFIG.minSize) / (CONFIG.maxSize - CONFIG.minSize) * 1.4;
+    phases[i] = Math.random() * Math.PI * 2;
+    seeds[i] = Math.random();
   }
-  
+
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('mass', new THREE.BufferAttribute(masses, 1));
-  
+  geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+  geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+  geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
+
   const material = new THREE.ShaderMaterial({
-    uniforms: { 
-      uGravity: { value: new THREE.Vector2(0, 0) },
-      uAspect: { value: window.innerWidth / window.innerHeight }
+    uniforms: {
+      uTime: { value: 0 },
+      uPixelRatio: { value: renderer.getPixelRatio() }
     },
-    vertexShader: document.getElementById('vertexShader').textContent,
-    fragmentShader: document.getElementById('fragmentShader').textContent,
+    vertexShader: `
+      attribute float aSize;
+      attribute float aPhase;
+      attribute float aSeed;
+      uniform float uTime;
+      uniform float uPixelRatio;
+      varying float vTwinkle;
+
+      void main() {
+        vTwinkle = 0.5 + 0.5 * sin(uTime * (1.2 + aSeed * 1.8) + aPhase * 6.2831);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        gl_PointSize = aSize * uPixelRatio * (0.55 + vTwinkle * 0.9);
+      }
+    `,
+    fragmentShader: `
+      varying float vTwinkle;
+      void main() {
+        vec2 uv = gl_PointCoord - vec2(0.5);
+        float d = length(uv);
+        if (d > 0.5) discard;
+        float alpha = smoothstep(0.5, 0.0, d);
+        vec3 deepGold = vec3(0.55, 0.32, 0.04);
+        vec3 brightGold = vec3(1.0, 0.93, 0.55);
+        vec3 color = mix(deepGold, brightGold, vTwinkle);
+        gl_FragColor = vec4(color, alpha * (0.45 + vTwinkle * 0.55));
+      }
+    `,
     transparent: true,
+    depthWrite: false,
     blending: THREE.AdditiveBlending
   });
-  
+
   const points = new THREE.Points(geometry, material);
   scene.add(points);
 
+  // ==============================
+  // リサイズ / 画面回転
+  // ==============================
   function resize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     renderer.setSize(w, h);
-    
-    const aspect = w / h;
+    material.uniforms.uPixelRatio.value = renderer.getPixelRatio();
+
+    aspect = w / h;
+    boundX = aspect - CONFIG.wallMargin;
+    boundY = 1 - CONFIG.wallMargin;
+
     camera.left = -aspect;
     camera.right = aspect;
     camera.top = 1;
     camera.bottom = -1;
     camera.updateProjectionMatrix();
-
-    if (material) {
-      material.uniforms.uAspect.value = aspect;
-    }
   }
-
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', resize);
-  
-  // 起動直後の描画を強制
   resize();
   renderer.render(scene, camera);
 
-  let gx = 0, gy = 0, filteredGx = 0, filteredGy = 0;
-  const alpha = 0.02;
+  // ==============================
+  // 傾き（ジャイロ）/ マウス / タッチ 入力
+  // ==============================
+  let targetGx = 0, targetGy = 0;
+
+  function getOrientationAngle() {
+    if (typeof window.orientation === 'number') return window.orientation;
+    if (screen.orientation && typeof screen.orientation.angle === 'number') return screen.orientation.angle;
+    return 0;
+  }
 
   window.addEventListener('deviceorientation', (e) => {
     let gx = 0, gy = 0;
-    const o = window.orientation || 0; 
-    
+    const o = getOrientationAngle();
+
     if (o === 0) {
-      gx = e.gamma / 400;
-      gy = e.beta / 400;
+      gx = e.gamma / 90;
+      gy = e.beta / 90;
     } else if (o === 90) {
-      gx = e.beta / 400;
-      gy = -e.gamma / 400;
-    } else if (o === -90) {
-      gx = -e.beta / 400;
-      gy = e.gamma / 400;
+      gx = e.beta / 90;
+      gy = -e.gamma / 90;
+    } else if (o === -90 || o === 270) {
+      gx = -e.beta / 90;
+      gy = e.gamma / 90;
     } else if (o === 180) {
-      gx = -e.gamma / 400;
-      gy = -e.beta / 400;
+      gx = -e.gamma / 90;
+      gy = -e.beta / 90;
     }
 
-    if (Math.abs(gx) < 0.005) gx = 0;
-    if (Math.abs(gy) < 0.005) gy = 0;
+    if (Math.abs(gx) < 0.02) gx = 0;
+    if (Math.abs(gy) < 0.02) gy = 0;
 
-    window.currentGx = gx;
-    window.currentGy = gy;
+    targetGx = Math.max(-1, Math.min(1, gx));
+    targetGy = Math.max(-1, Math.min(1, gy));
   });
 
-  function animate() {
-    filteredGx += ((window.currentGx || 0) - filteredGx) * alpha;
-    filteredGy += ((window.currentGy || 0) - filteredGy) * alpha;
-    
-    material.uniforms.uGravity.value.set(filteredGx, -filteredGy);
-    
+  // PCでの確認用フォールバック：マウス位置で傾きを疑似的に再現
+  window.addEventListener('mousemove', (e) => {
+    const nx = (e.clientX / window.innerWidth) * 2 - 1;
+    const ny = (e.clientY / window.innerHeight) * 2 - 1;
+    targetGx = nx;
+    targetGy = ny;
+  });
+
+  // モバイルでジャイロ許可が取れない/対応してない端末向けのタッチフォールバック
+  window.addEventListener('touchmove', (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    const t = e.touches[0];
+    const nx = (t.clientX / window.innerWidth) * 2 - 1;
+    const ny = (t.clientY / window.innerHeight) * 2 - 1;
+    targetGx = nx;
+    targetGy = ny;
+  }, { passive: true });
+
+  // ==============================
+  // メインループ：速度・慣性・粘性・壁の跳ね返りを持つ疑似リキッド物理
+  // ==============================
+  let filteredGx = 0, filteredGy = 0;
+  const smoothing = 0.04; // 傾きが変わったときの追従の滑らかさ
+
+  const clock = new THREE.Clock();
+  let running = false;
+
+  function step() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    filteredGx += (targetGx - filteredGx) * smoothing;
+    filteredGy += (targetGy - filteredGy) * smoothing;
+
+    const gx = filteredGx;
+    const gy = -filteredGy; // 画面座標とワールド座標のyを合わせる
+
+    const posAttr = geometry.getAttribute('position');
+    const arr = posAttr.array;
+
+    for (let i = 0; i < COUNT; i++) {
+      const ix = i * 2;
+      let vx = velocities[ix];
+      let vy = velocities[ix + 1];
+      const m = masses[i];
+
+      // 重力（傾き）による加速
+      vx += gx * CONFIG.gravityStrength * m * dt;
+      vy += gy * CONFIG.gravityStrength * m * dt;
+
+      // 液体に浮遊してる感じの微振動
+      vx += (Math.random() - 0.5) * CONFIG.jitter;
+      vy += (Math.random() - 0.5) * CONFIG.jitter;
+
+      // 粘性（減衰）
+      vx *= CONFIG.damping;
+      vy *= CONFIG.damping;
+
+      let px = arr[i * 3] + vx;
+      let py = arr[i * 3 + 1] + vy;
+
+      // 壁との衝突（画面の縁でせき止められて跳ね返る）
+      if (px > boundX) { px = boundX; vx *= -CONFIG.restitution; }
+      else if (px < -boundX) { px = -boundX; vx *= -CONFIG.restitution; }
+
+      if (py > boundY) { py = boundY; vy *= -CONFIG.restitution; }
+      else if (py < -boundY) { py = -boundY; vy *= -CONFIG.restitution; }
+
+      arr[i * 3] = px;
+      arr[i * 3 + 1] = py;
+      velocities[ix] = vx;
+      velocities[ix + 1] = vy;
+    }
+
+    posAttr.needsUpdate = true;
+    material.uniforms.uTime.value = clock.getElapsedTime();
+
     renderer.render(scene, camera);
-    requestAnimationFrame(animate);
+    if (running) requestAnimationFrame(step);
   }
-    
-  document.getElementById('gyro-btn').addEventListener('click', (e) => {
-    e.target.style.display = 'none';
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission().then(r => { if(r === 'granted') animate(); });
+
+  function start() {
+    if (running) return;
+    running = true;
+    clock.start();
+    requestAnimationFrame(step);
+  }
+
+  btn.addEventListener('click', () => {
+    btn.style.display = 'none';
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // iOS 13+ はユーザー操作の中で許可を取る必要がある
+      DeviceOrientationEvent.requestPermission()
+        .then((res) => { start(); }) // 許可が下りなくてもマウス/タッチで動くので start はする
+        .catch(() => { start(); });
     } else {
-      animate();
+      start();
     }
   });
 })();
 </script>
+</body>
+</html>
