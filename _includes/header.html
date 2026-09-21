@@ -1,16 +1,121 @@
-<header id="site-header">
+
+<header id="site-header" class="site-header">
   <div class="header-inner">
-    <div class="left-group">
-      <button class="hamburger">☰</button>
-      <a href="/" class="logo">EfaYukacoonar</a>
+
+    <!-- 左側：メニューとロゴ -->
+    <div class="header-left">
+      <button
+        id="menu-open"
+        class="icon-button"
+        type="button"
+        aria-label="メニューを開く"
+        aria-controls="site-drawer"
+        aria-expanded="false"
+      >
+        <span class="hamburger-icon" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+
+      <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="EfaYukacoonar ホーム">
+        <span class="brand-full">EfaYukacoonar</span>
+        <span class="brand-short">Efa</span>
+      </a>
     </div>
-    <div class="right-group">
-      <input type="text" placeholder="Search...">
-      <div class="account-icon">👤</div>
+
+    <!-- 中央：現在のエリア名 -->
+    <div class="current-area" aria-live="polite">
+      <span id="current-area-name">BOTL</span>
     </div>
+
+    <!-- 右側：検索 -->
+    <div class="header-right">
+      <div id="search-container" class="search-container">
+        <button
+          id="search-toggle"
+          class="icon-button"
+          type="button"
+          aria-label="検索欄を開く"
+          aria-controls="site-search"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true">⌕</span>
+        </button>
+
+        <form id="site-search" class="search-form" role="search">
+          <label class="sr-only" for="search-input">サイト内検索</label>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search..."
+            autocomplete="off"
+          />
+          <button type="submit" aria-label="検索を実行">→</button>
+        </form>
+      </div>
+    </div>
+
   </div>
 </header>
 
-<main>
-  <h1>ここは帝国の入り口</h1>
-</main>
+
+<!-- 背景オーバーレイ -->
+<div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+
+
+<!-- サイドメニュー -->
+<aside
+  id="site-drawer"
+  class="site-drawer"
+  aria-label="サイトメニュー"
+  aria-hidden="true"
+  inert
+>
+  <div class="drawer-header">
+    <span class="drawer-title">Navigation</span>
+
+    <button
+      id="menu-close"
+      class="icon-button"
+      type="button"
+      aria-label="メニューを閉じる"
+    >
+      ×
+    </button>
+  </div>
+
+  <nav class="drawer-nav" aria-label="メインナビゲーション">
+
+    <a class="drawer-link" href="{{ '/' | relative_url }}">
+      <span>BOTL</span>
+      <span aria-hidden="true">→</span>
+    </a>
+
+    <a class="drawer-link" href="{{ '/main-image/' | relative_url }}">
+      <span>Images</span>
+      <span aria-hidden="true">→</span>
+    </a>
+
+    <a class="drawer-link" href="{{ '/main-game/' | relative_url }}">
+      <span>Games</span>
+      <span aria-hidden="true">→</span>
+    </a>
+
+    <a class="drawer-link" href="{{ '/main-database/' | relative_url }}">
+      <span>Database</span>
+      <span aria-hidden="true">→</span>
+    </a>
+
+    <a class="drawer-link" href="{{ '/support/' | relative_url }}">
+      <span>Support</span>
+      <span aria-hidden="true">→</span>
+    </a>
+
+  </nav>
+
+  <div class="drawer-footer">
+    <span>EfaYukacoonar</span>
+  </div>
+</aside>
