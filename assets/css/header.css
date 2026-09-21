@@ -1,36 +1,448 @@
-/* 1. 絶対にヘッダーを一番上に貼り付ける */
-#site-header {
+
+/* ========================================
+   EfaYukacoonar - Common Header
+   ======================================== */
+
+
+/* ---------- 基本設定 ---------- */
+
+:root {
+  --header-height: 64px;
+  --header-bg: rgba(10, 10, 16, 0.94);
+  --header-border: rgba(255, 255, 255, 0.16);
+  --header-text: #ffffff;
+  --header-accent: #d4af37;
+  --drawer-bg: #111118;
+  --drawer-width: min(360px, 86vw);
+  --transition-fast: 180ms ease;
+  --transition-normal: 280ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+/* ---------- ヘッダー ---------- */
+
+.site-header {
   position: fixed;
   top: 0;
   left: 0;
+  z-index: 1000;
+
   width: 100%;
-  height: 60px;
-  background: rgba(0, 0, 0, 0.9);
-  border-bottom: 2px solid #d4af37;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  z-index: 9999;
+  height: var(--header-height);
+
+  color: var(--header-text);
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal);
 }
 
-/* 2. 中身を横に並べる */
 .header-inner {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+
   width: 100%;
-  align-items: center;
+  height: 100%;
+  padding: 0 20px;
 }
 
-.left-group, .right-group {
+.header-left,
+.header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
-  color: #d4af37;
+  gap: 12px;
 }
 
-.logo {
-  font-family: 'Imperial Script', cursive;
-  font-size: 24px;
-  color: #d4af37;
+.header-left {
+  justify-self: start;
+}
+
+.header-right {
+  justify-self: end;
+}
+
+
+/* ---------- Efaロゴ ---------- */
+
+.site-brand {
+  color: var(--header-text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.site-brand:hover,
+.site-brand:focus-visible {
+  color: var(--header-accent);
+}
+
+.brand-short {
+  display: none;
+}
+
+
+/* ---------- 現在のエリア名 ---------- */
+
+.current-area {
+  justify-self: center;
+
+  color: var(--header-accent);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+
+/* ---------- ボタン ---------- */
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  color: var(--header-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  cursor: pointer;
+  font: inherit;
+
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.icon-button:hover,
+.icon-button:focus-visible {
+  color: var(--header-accent);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--header-border);
+}
+
+.icon-button:focus-visible,
+.drawer-link:focus-visible,
+.search-form input:focus-visible {
+  outline: 2px solid var(--header-accent);
+  outline-offset: 3px;
+}
+
+
+/* ---------- ハンバーガー ---------- */
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+
+  width: 22px;
+}
+
+.hamburger-icon span {
+  display: block;
+
+  width: 100%;
+  height: 2px;
+
+  background: currentColor;
+  border-radius: 2px;
+
+  transition: transform var(--transition-fast);
+}
+
+
+/* ---------- 検索 ---------- */
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-form {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  width: min(300px, 80vw);
+  padding: 6px;
+
+  background: var(--drawer-bg);
+  border: 1px solid var(--header-border);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  pointer-events: none;
+
+  transition:
+    opacity var(--transition-fast),
+    visibility var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.search-container.is-open .search-form {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.search-form input {
+  min-width: 0;
+  width: 100%;
+  padding: 10px;
+
+  color: var(--header-text);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  font: inherit;
+}
+
+.search-form input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.search-form button {
+  width: 36px;
+  height: 36px;
+
+  color: var(--header-text);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.search-form button:hover,
+.search-form button:focus-visible {
+  color: var(--header-accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+
+/* ---------- 背景オーバーレイ ---------- */
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.drawer-backdrop.is-visible {
+  opacity: 1;
+}
+
+
+/* ---------- サイドメニュー ---------- */
+
+.site-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+
+  display: flex;
+  flex-direction: column;
+
+  width: var(--drawer-width);
+  height: 100dvh;
+  padding: 20px;
+
+  color: var(--header-text);
+  background: var(--drawer-bg);
+  border-right: 1px solid var(--header-border);
+  box-shadow: 12px 0 40px rgba(0, 0, 0, 0.3);
+
+  transform: translateX(-105%);
+  visibility: hidden;
+
+  transition:
+    transform var(--transition-normal),
+    visibility var(--transition-normal);
+}
+
+.site-drawer.is-open {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 44px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--header-border);
+}
+
+.drawer-title {
+  color: var(--header-accent);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding-top: 24px;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 16px 12px;
+
+  color: var(--header-text);
+  border-radius: 8px;
+
+  font-size: 1rem;
+  text-decoration: none;
+
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    padding-left var(--transition-fast);
+}
+
+.drawer-link:hover,
+.drawer-link:focus-visible {
+  padding-left: 20px;
+  color: var(--header-accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.drawer-footer {
+  margin-top: auto;
+  padding-top: 20px;
+
+  color: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid var(--header-border);
+
+  font-size: 0.8rem;
+}
+
+
+/* ---------- メインコンテンツの余白 ---------- */
+
+/*
+  固定ヘッダーと本文が重ならないようにする。
+  既存のページで個別設定がある場合は調整可能。
+*/
+
+main {
+  padding-top: var(--header-height);
+}
+
+
+/* ---------- アクセシビリティ ---------- */
+
+.sr-only {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+/* ---------- スマートフォン ---------- */
+
+@media (max-width: 600px) {
+  :root {
+    --header-height: 56px;
+  }
+
+  .header-inner {
+    padding: 0 10px;
+  }
+
+  .brand-full {
+    display: none;
+  }
+
+  .brand-short {
+    display: inline;
+  }
+
+  .site-brand {
+    font-size: 1.1rem;
+  }
+
+  .current-area {
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+  }
+
+  .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+
+/* ---------- モーション低減設定 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
