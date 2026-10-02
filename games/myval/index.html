@@ -8,359 +8,447 @@ title: MyVal
 <section class="myval" id="myval-app" aria-label="MyVal">
   <div class="myval-shell">
 
-    <header class="myval-page-heading">
-      <div>
-        <p class="eyebrow">VALORANT PLAYER DATABASE</p>
-        <h1>MyVal</h1>
-        <p class="muted">Your personal Valorant dashboard.</p>
-      </div>
-      <span class="prototype-badge">DEMO DATA</span>
-    </header>
+    <!-- =====================================================
+         HERO / PROFILE STATUS
+         ===================================================== -->
+    <section class="myval-hero">
 
-    <nav class="myval-tabs" aria-label="MyVal sections" role="tablist">
-      <button class="myval-tab is-active"
-              id="tab-matches"
-              role="tab"
-              aria-selected="true"
-              aria-controls="panel-matches"
-              data-tab="matches">
+      <!-- Background RR graph -->
+      <div class="hero-graph" aria-hidden="true">
+
+        <svg
+          viewBox="0 0 900 300"
+          preserveAspectRatio="none"
+        >
+
+          <defs>
+            <linearGradient
+              id="heroGraphFade"
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="0"
+            >
+              <stop offset="0%" stop-color="#d8b46a" stop-opacity="0"/>
+              <stop offset="38%" stop-color="#d8b46a" stop-opacity=".03"/>
+              <stop offset="65%" stop-color="#d8b46a" stop-opacity=".16"/>
+              <stop offset="100%" stop-color="#d8b46a" stop-opacity=".34"/>
+            </linearGradient>
+
+            <linearGradient
+              id="heroGraphFill"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop offset="0%" stop-color="#d8b46a" stop-opacity=".14"/>
+              <stop offset="100%" stop-color="#d8b46a" stop-opacity="0"/>
+            </linearGradient>
+
+            <linearGradient
+              id="heroGraphMask"
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="0"
+            >
+              <stop offset="0%" stop-color="black"/>
+              <stop offset="32%" stop-color="black"/>
+              <stop offset="55%" stop-color="white"/>
+              <stop offset="100%" stop-color="white"/>
+            </linearGradient>
+
+            <mask id="heroGraphMaskShape">
+              <rect
+                x="0"
+                y="0"
+                width="900"
+                height="300"
+                fill="url(#heroGraphMask)"
+              />
+            </mask>
+          </defs>
+
+          <!-- subtle horizontal guides -->
+          <g class="hero-grid">
+            <line x1="0" y1="60" x2="900" y2="60"/>
+            <line x1="0" y1="120" x2="900" y2="120"/>
+            <line x1="0" y1="180" x2="900" y2="180"/>
+            <line x1="0" y1="240" x2="900" y2="240"/>
+          </g>
+
+          <g mask="url(#heroGraphMaskShape)">
+
+            <!-- filled area -->
+            <path
+              class="hero-chart-fill"
+              d="
+                M0 245
+                L70 226
+                L135 238
+                L200 202
+                L265 214
+                L330 168
+                L395 181
+                L460 142
+                L525 154
+                L590 111
+                L655 128
+                L720 85
+                L790 96
+                L900 32
+                L900 300
+                L0 300
+                Z
+              "
+              fill="url(#heroGraphFill)"
+            />
+
+            <!-- main line -->
+            <path
+              class="hero-chart-line"
+              d="
+                M0 245
+                L70 226
+                L135 238
+                L200 202
+                L265 214
+                L330 168
+                L395 181
+                L460 142
+                L525 154
+                L590 111
+                L655 128
+                L720 85
+                L790 96
+                L900 32
+              "
+              fill="none"
+              stroke="url(#heroGraphFade)"
+            />
+
+            <circle
+              class="hero-chart-point"
+              cx="900"
+              cy="32"
+              r="6"
+            />
+
+          </g>
+        </svg>
+      </div>
+
+
+      <!-- Left profile -->
+      <div class="hero-profile">
+
+        <div class="hero-eyebrow">
+          <span class="status-dot"></span>
+          ONLINE PROFILE
+        </div>
+
+        <div class="hero-name">
+          Efa
+        </div>
+
+        <div class="hero-tag">
+          #MYVAL
+        </div>
+
+        <div class="hero-level">
+          Level <strong>99</strong>
+        </div>
+
+      </div>
+
+
+      <!-- Right rank -->
+      <div class="hero-rank">
+
+        <div class="hero-rank-label">
+          CURRENT RANK
+        </div>
+
+        <div class="hero-rank-name">
+          Radiant <span>#1</span>
+        </div>
+
+        <div class="hero-rank-rating-label">
+          RANK RATING
+        </div>
+
+        <div class="hero-rr-title">
+          RR Progress
+        </div>
+
+        <div class="hero-rr-row">
+          <strong>+18 RR</strong>
+          <span>198 / 200</span>
+        </div>
+
+        <div class="hero-rr-bar">
+          <span style="width: 99%"></span>
+        </div>
+
+      </div>
+
+
+      <div class="hero-date">
+        14 DAYS AGO
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MAIN TABS
+         ===================================================== -->
+    <nav
+      class="myval-tabs"
+      aria-label="MyVal sections"
+      role="tablist"
+    >
+
+      <button
+        class="myval-tab is-active"
+        id="tab-matches"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panel-matches"
+        data-tab="matches"
+      >
         Matches
       </button>
 
-      <button class="myval-tab"
-              id="tab-loadout"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panel-loadout"
-              data-tab="loadout">
+      <button
+        class="myval-tab"
+        id="tab-loadout"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-loadout"
+        data-tab="loadout"
+      >
         Loadout
       </button>
 
-      <button class="myval-tab"
-              id="tab-store"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panel-store"
-              data-tab="store">
+      <button
+        class="myval-tab"
+        id="tab-store"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-store"
+        data-tab="store"
+      >
         Store
       </button>
+
     </nav>
+
 
     <div class="myval-panels">
 
-      <!-- =========================
+      <!-- =====================================================
            MATCHES
-           ========================= -->
-      <section class="myval-panel is-active"
-               id="panel-matches"
-               role="tabpanel"
-               aria-labelledby="tab-matches"
-               data-panel="matches">
+           ===================================================== -->
+      <section
+        class="myval-panel is-active"
+        id="panel-matches"
+        role="tabpanel"
+        aria-labelledby="tab-matches"
+        data-panel="matches"
+      >
 
-        <div class="profile-grid">
+        <div class="section-heading matches-heading">
 
-          <article class="myval-card profile-card">
-            <div class="profile-topline">
-              <span class="status-dot"></span>
-              <span>ONLINE PROFILE</span>
-            </div>
-
-            <div class="profile-main">
-              <div class="avatar-placeholder" aria-hidden="true">E</div>
-
-              <div>
-                <p class="profile-name">Efa</p>
-                <p class="profile-tag">#MYVAL</p>
-                <p class="profile-level">
-                  Level <strong>99</strong>
-                </p>
-              </div>
-            </div>
-
-            <div class="rank-row">
-              <div>
-                <p class="label">CURRENT RANK</p>
-                <h2>Radiant <span>#1</span></h2>
-              </div>
-
-              <div class="rank-emblem" aria-hidden="true">✦</div>
-            </div>
-          </article>
-
-
-          <article class="myval-card rr-card">
-            <div class="card-heading">
-              <div>
-                <p class="label">RANK RATING</p>
-                <h2>RR Progress</h2>
-              </div>
-
-              <span class="trend-up">+18 RR</span>
-            </div>
-
-            <div class="rr-value">198 / 200</div>
-
-            <div class="rr-bar" aria-label="198 of 200 RR">
-              <span style="width: 99%"></span>
-            </div>
-
-            <svg class="rr-chart"
-                 viewBox="0 0 640 190"
-                 role="img"
-                 aria-label="Example rank rating trend rising over time">
-
-              <defs>
-                <linearGradient id="rr-fill"
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1">
-                  <stop offset="0%"
-                        stop-color="#d8b46a"
-                        stop-opacity="0.32"/>
-                  <stop offset="100%"
-                        stop-color="#d8b46a"
-                        stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-
-              <path class="chart-grid"
-                    d="M0 30 H640 M0 85 H640 M0 140 H640"/>
-
-              <path class="chart-area"
-                    d="M0 150
-                       L58 132
-                       L112 140
-                       L168 105
-                       L220 116
-                       L276 82
-                       L334 94
-                       L392 58
-                       L450 70
-                       L506 40
-                       L566 50
-                       L640 16
-                       L640 190
-                       L0 190 Z"/>
-
-              <path class="chart-line"
-                    d="M0 150
-                       L58 132
-                       L112 140
-                       L168 105
-                       L220 116
-                       L276 82
-                       L334 94
-                       L392 58
-                       L450 70
-                       L506 40
-                       L566 50
-                       L640 16"/>
-
-              <circle class="chart-point"
-                      cx="640"
-                      cy="16"
-                      r="6"/>
-            </svg>
-
-            <div class="chart-labels">
-              <span>14 DAYS AGO</span>
-              <span>TODAY</span>
-            </div>
-          </article>
-
-        </div>
-
-
-        <div class="section-heading">
           <div>
             <p class="eyebrow">RECENT ACTIVITY</p>
             <h2>Match History</h2>
           </div>
 
-          <span class="muted">Last 5 matches</span>
+          <span
+            class="muted"
+            id="match-count"
+          >
+            All modes
+          </span>
+
+        </div>
+
+
+        <!-- Mode filter -->
+        <div
+          class="match-filters"
+          id="match-filters"
+          aria-label="Match mode filters"
+        >
+
+          <!-- Buttons are generated by myval.js -->
+
         </div>
 
 
-        <div class="match-list">
+        <!-- Match list -->
+        <div
+          class="match-list"
+          id="match-list"
+        >
 
-          <article class="match-card win">
-            <div class="match-result">
-              <strong>W</strong>
-              <span>+13 RR</span>
-            </div>
-
-            <div class="match-map">
-              <strong>Ascent</strong>
-              <span>Competitive · 32m ago</span>
-            </div>
-
-            <div class="match-agent">
-              <span class="agent-symbol">J</span>
-              <span>Jett</span>
-            </div>
-
-            <div class="match-score">
-              <strong>13 : 11</strong>
-              <span>Victory</span>
-            </div>
-
-            <div class="match-stats">
-              <strong>ACS 298</strong>
-              <span>K/D/A 24/16/8</span>
-            </div>
-          </article>
-
-
-          <article class="match-card loss">
-            <div class="match-result">
-              <strong>L</strong>
-              <span>-22 RR</span>
-            </div>
-
-            <div class="match-map">
-              <strong>Icebox</strong>
-              <span>Competitive · 2h ago</span>
-            </div>
-
-            <div class="match-agent">
-              <span class="agent-symbol">J</span>
-              <span>Jett</span>
-            </div>
-
-            <div class="match-score">
-              <strong>11 : 13</strong>
-              <span>Defeat</span>
-            </div>
-
-            <div class="match-stats">
-              <strong>ACS 278</strong>
-              <span>K/D/A 21/19/7</span>
-            </div>
-          </article>
-
-
-          <article class="match-card win">
-            <div class="match-result">
-              <strong>W</strong>
-              <span>+19 RR</span>
-            </div>
-
-            <div class="match-map">
-              <strong>Haven</strong>
-              <span>Competitive · 5h ago</span>
-            </div>
-
-            <div class="match-agent">
-              <span class="agent-symbol">S</span>
-              <span>Sova</span>
-            </div>
-
-            <div class="match-score">
-              <strong>13 : 9</strong>
-              <span>Victory</span>
-            </div>
-
-            <div class="match-stats">
-              <strong>ACS 244</strong>
-              <span>K/D/A 19/12/10</span>
-            </div>
-          </article>
+          <!-- Matches are generated by myval.js -->
 
         </div>
+
       </section>
 
 
-      <!-- =========================
+      <!-- =====================================================
            LOADOUT
-           ========================= -->
-      <section class="myval-panel"
-               id="panel-loadout"
-               role="tabpanel"
-               aria-labelledby="tab-loadout"
-               data-panel="loadout"
-               hidden>
+           ===================================================== -->
+      <section
+        class="myval-panel"
+        id="panel-loadout"
+        role="tabpanel"
+        aria-labelledby="tab-loadout"
+        data-panel="loadout"
+        hidden
+      >
 
         <div class="section-heading">
+
           <div>
             <p class="eyebrow">COLLECTION</p>
             <h2>Loadout</h2>
           </div>
 
-          <span class="muted">Equipped items</span>
+          <span class="muted">
+            Equipped items
+          </span>
+
         </div>
 
 
         <div class="loadout-grid">
 
           <article class="myval-card loadout-card player-card-large">
-            <span class="label">PLAYER CARD</span>
+
+            <span class="label">
+              PLAYER CARD
+            </span>
 
             <div class="item-art card-art">
               EFA
               <small>MYVAL</small>
             </div>
 
-            <h3>Radiant Memory</h3>
-            <p class="muted">Player Card</p>
+            <h3>
+              Radiant Memory
+            </h3>
+
+            <p class="muted">
+              Player Card
+            </p>
+
           </article>
 
 
           <article class="myval-card loadout-card">
-            <span class="label">SPRAY</span>
 
-            <div class="item-art spray-art">✹</div>
+            <span class="label">
+              SPRAY
+            </span>
 
-            <h3>Victory Mark</h3>
-            <p class="muted">Equipped Spray</p>
+            <div class="item-art spray-art">
+              ✹
+            </div>
+
+            <h3>
+              Victory Mark
+            </h3>
+
+            <p class="muted">
+              Equipped Spray
+            </p>
+
           </article>
 
 
           <article class="myval-card loadout-card">
-            <span class="label">FLEX</span>
 
-            <div class="item-art flex-art">◇</div>
+            <span class="label">
+              FLEX
+            </span>
 
-            <h3>Prism Core</h3>
-            <p class="muted">Equipped Flex</p>
+            <div class="item-art flex-art">
+              ◇
+            </div>
+
+            <h3>
+              Prism Core
+            </h3>
+
+            <p class="muted">
+              Equipped Flex
+            </p>
+
           </article>
 
 
           <article class="myval-card loadout-card">
-            <span class="label">MELEE</span>
 
-            <div class="item-art melee-art">╱╲</div>
+            <span class="label">
+              MELEE
+            </span>
 
-            <h3>Protocol Blade</h3>
-            <p class="muted">Equipped Melee</p>
+            <div class="item-art melee-art">
+              ╱╲
+            </div>
+
+            <h3>
+              Protocol Blade
+            </h3>
+
+            <p class="muted">
+              Equipped Melee
+            </p>
+
           </article>
 
         </div>
+
       </section>
 
 
-      <!-- =========================
+      <!-- =====================================================
            STORE
-           ========================= -->
-      <section class="myval-panel"
-               id="panel-store"
-               role="tabpanel"
-               aria-labelledby="tab-store"
-               data-panel="store"
-               hidden>
+           ===================================================== -->
+      <section
+        class="myval-panel"
+        id="panel-store"
+        role="tabpanel"
+        aria-labelledby="tab-store"
+        data-panel="store"
+        hidden
+      >
 
         <div class="section-heading">
+
           <div>
             <p class="eyebrow">ROTATING SHOP</p>
             <h2>Store</h2>
           </div>
 
-          <span class="muted">Demo inventory</span>
+          <span class="muted">
+            Demo inventory
+          </span>
+
         </div>
 
 
         <section class="store-section">
-          <h3>Night Market</h3>
+
+          <h3>
+            Night Market
+          </h3>
 
           <div class="store-grid night-market">
 
@@ -389,15 +477,24 @@ title: MyVal
             </article>
 
           </div>
+
         </section>
 
 
         <section class="store-section">
 
           <div class="store-title-row">
-            <h3>Daily Shop</h3>
-            <span class="countdown">Refreshes in 08:42:17</span>
+
+            <h3>
+              Daily Shop
+            </h3>
+
+            <span class="countdown">
+              Refreshes in 08:42:17
+            </span>
+
           </div>
+
 
           <div class="store-grid daily-shop">
 
@@ -426,11 +523,16 @@ title: MyVal
             </article>
 
           </div>
+
         </section>
+
       </section>
 
     </div>
   </div>
 </section>
 
-<script src="{{ 'games/myval/myval.js' | relative_url }}" defer></script>
+<script
+  src="{{ 'games/myval/myval.js' | relative_url }}"
+  defer
+></script>
