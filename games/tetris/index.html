@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#070a12">
+<title>TETRIS // Efa Games</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main class="shell">
+<header class="topbar">
+<a href="../" class="back">‹ GAMES</a>
+<div class="brand"><b>EFA</b><span>TETRIS</span></div>
+<button id="pauseTop" class="icon">Ⅱ</button>
+</header>
+
+<section class="layout">
+<aside class="side">
+<div class="card stat"><small>SCORE</small><strong id="score">0</strong></div>
+<div class="card stat"><small>LINES</small><strong id="lines">0</strong></div>
+<div class="card stat"><small>LEVEL</small><strong id="level">1</strong></div>
+<div class="card"><small>HOLD</small><div id="hold" class="preview"></div></div>
+</aside>
+
+<section class="board-area">
+<div class="board-frame">
+<canvas id="board" width="300" height="600"></canvas>
+<div id="overlay" class="overlay">
+<div>
+<small>EFA GAMES</small><h1 id="overlayTitle">TETRIS</h1>
+<p id="overlayText">Keyboard or touch controls</p>
+<button id="start" class="primary">START GAME</button>
+</div>
+</div>
+</div>
+<div class="board-info"><span id="status">READY</span><span>7-BAG · GHOST · HOLD</span></div>
+</section>
+
+<aside class="side">
+<div class="card"><small>NEXT</small><div id="next"></div></div>
+<div class="card help"><small>KEYBOARD</small>
+<p><b>← →</b> MOVE</p><p><b>↓</b> SOFT DROP</p><p><b>↑ / X</b> ROTATE</p>
+<p><b>SPACE</b> HARD DROP</p><p><b>C / SHIFT</b> HOLD</p><p><b>ESC / P</b> PAUSE</p>
+</div></aside>
+</section>
+
+<section class="touch">
+<div class="row">
+<button data-a="hold">HOLD</button><button data-a="rotate">↻</button><button data-a="pause">Ⅱ</button>
+</div>
+<div class="row">
+<button data-a="left">◀</button><button data-a="drop">▼▼</button><button data-a="right">▶</button>
+</div>
+<button class="soft" data-a="down">▼ SOFT DROP</button>
+</section>
+<footer>Efa Games · TETRIS</footer>
+</main>
+<script src="./game.js"></script>
+</body>
+</html>
